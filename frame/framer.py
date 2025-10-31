@@ -13,6 +13,7 @@ class Framer():
     def __init__(self):
         self._code = []
         self._vars = {}
+        self._aliases = {}
     
     def var(self, name:str, value):
         self._vars[name] = value
@@ -45,7 +46,6 @@ class System:
     framer: Framer = Framer()
     last_framer: Framer = framer
     framers: dict = {'basic': Framer(), 'temp': Framer()}
-    parameters = {}
     lock = threading.Lock()
     def match(condition: str, true_block: str, false_block: str = None, framer = None):
         framer = System.framer if framer == None else framer
@@ -67,11 +67,11 @@ class Var:
         with System.lock:
             framer.var(param_name, value)
             framer._new_code_line(f'{name}: {type} = {repr(value) if to_repr else value}')
-            System.parameters[name] = param_name
+            framer._aliases[name] = param_name
 def Get(name: str, framer = None):
     with System.lock:
         framer: Framer = System.framer if framer == None else framer
-        return framer._vars.get(System.parameters[name])
+        return framer._vars.get(framer._aliases[name])
 class Return:
     def __init__(self, value: Var, framer = None):
         framer = System.framer if framer == None else framer
