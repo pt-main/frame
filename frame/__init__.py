@@ -6,10 +6,11 @@ Functions:
         Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @frmaing, framing_result
         FramerError, FramingError
 '''
-from frame.op import __version__
 
-from frame.op import (Framer, Exec as fExec, Get as fGet, Var as fVar, System as fSys, Return as fReturn, Code as fCode)
-
+from .op import __version__
+from .op import (Framer, Exec as fExec, Get as fGet, Var as fVar, 
+                System as fSys, Return as fReturn, Code as fCode,
+                FramerError)
 
 
 def framing(
