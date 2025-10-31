@@ -1,14 +1,15 @@
 '''
 # Frame
 The Frame - multitool module for programming.
+
 Functions: 
     Framer functions -
         Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @frmaing, framing_result
         FramerError, FramingError
 '''
 
-from .op import __version__
-from .op import (Framer, Exec as fExec, Get as fGet, Var as fVar, 
+from .frame import __version__
+from .frame import (Framer, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
                 FramerError)
 
@@ -57,25 +58,38 @@ print(fGet('res', res_frame))
             fVar(name_of_result_variable, res, framer=framer_obj)
             return res
         return wrapper
-    if return_frame:
-        fVar('frame', framer_obj, to_repr=False, framer=fSys.framers['temp'])
-        return decorator
-    else:
-        return decorator
-    
+    if return_frame: fVar('frame', framer_obj, to_repr=False, framer=fSys.framers['temp'])
+    return decorator
 
 
 
-from frame.op import FramerError
 class FramingError(Exception):
     def __init__(self, *args):
         super().__init__(*args)
     
 def framing_result(framer: Framer, func: object, name_of_result_variable: str = 'res', *func_args, **func_kwargs):
     '''
-    ## Getting result from [@framing def ...] function
-    ### Args:
-    - '''
+## Getting result from [@framing def ...] function
+### Args:
+- framer: object[Frame] -  framer to run.
+- func: object - function for runing.
+- name_of_result_variable: str - name_of_result_variable from decorator @framing.
+- *args & **kwargs - arguments for [func] running.
+### Example:
+change 
+```
+# geting frame object from decorator
+res_frame = fGet('frame', fSys.framers['temp'])
+# runing 
+print(test(), res_frame)
+# geting result variable from decorator
+print(fGet('res', res_frame))
+```
+to just
+```
+print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
+```
+    '''
     resf = func(*func_args, **func_kwargs)
     resg = fGet(name_of_result_variable, framer)
     if resf != resg: raise FramingError(f'Variable [{name_of_result_variable}] is not found in Frame[{framer}].')
