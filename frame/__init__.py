@@ -8,6 +8,7 @@ Functions:
         FramerError, FramingError
 '''
 
+from .op import __version__
 from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
                 FramerError)
@@ -89,6 +90,7 @@ to just
 print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 ```
     '''
+    if isinstance(framer, Frame): framer = framer.framer
     resf = func(*func_args, **func_kwargs)
     resg = fGet(name_of_result_variable, framer)
     if resf != resg: raise FramingError(f'Variable [{name_of_result_variable}] is not found in Frame[{framer}].')
