@@ -8,6 +8,7 @@ Functions:
         FramerError, FramingError
 '''
 
+__verion__ = '0.2.6'
 from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
                 FramerError)
