@@ -1,4 +1,7 @@
 import threading
+import pickle
+import json
+from typing import Dict, Any
 
 
 def exec_and_return(code: str, 
@@ -239,6 +242,8 @@ Abstraction api for all [Framer] and [System] methods.
 
 (framer in functions is Frame.framer)
 
+You can use with to create context, and call [Frame] object like `ctx()` to get framer.
+
 ### Args of initialization:
 - {framer}: str | Framer = 'new' - framer context object for frame.
 - {safemode}: bool - if safemode true, Exec method will be is not available.
@@ -297,6 +302,64 @@ result: 500
     def reset(self): 
         '''Recreate framer.'''
         self.framer = Framer()
+    def save(self, filename: str, format: str = 'pickle'):
+        '''
+        ## Saving frame to file.
+        ### Args:
+            {filename}: str - file name
+            {format}: str - saving format ('pickle' or 'json')
+        '''
+        data = {
+            'framer': {
+                '_code': self.framer._code,
+                '_vars': self.framer._vars,
+                '_aliases': self.framer._aliases
+            },
+            'safemode': self.__safemode
+        }
+        try:
+            if format == 'pickle':
+                with open(filename, 'wb') as f: pickle.dump(data, f)
+            elif format == 'json':
+                json_data = {
+                    'framer': {
+                        '_code': data['framer']['_code'],
+                        '_vars': {k: str(v) for k, v in data['framer']['_vars'].items()},  # Приводим к строке для JSON
+                        '_aliases': data['framer']['_aliases']
+                    },
+                    'safemode': data['safemode']
+                }
+                with open(filename, 'w', encoding='utf-8') as f: 
+                    json.dump(json_data, f, indent=2, ensure_ascii=False)
+            else: raise FrameError(f"Unsupported format: {format}")
+        except Exception as e:
+            raise FrameError(f"Save failed: {e}")
+
+    def load(self, filename: str, format: str = 'pickle'):
+        '''
+        ## Loading frame from file.
+        ### Args:
+            {filename}: str - file name
+            {format}: str - loading format ('pickle' or 'json')
+        '''
+        try:
+            if format == 'pickle':
+                with open(filename, 'rb') as f: data = pickle.load(f)
+            elif format == 'json':
+                with open(filename, 'r', encoding='utf-8') as f: data = json.load(f)
+                restored_vars = {}
+                for k, v in data['framer']['_vars'].items():
+                    try: restored_vars[k] = eval(v)
+                    except: restored_vars[k] = v
+                data['framer']['_vars'] = restored_vars
+            else: raise FrameError(f"Unsupported format: {format}")
+            self.framer._code = data['framer']['_code']
+            self.framer._vars = data['framer']['_vars'] 
+            self.framer._aliases = data['framer']['_aliases']
+            self.__safemode = data['safemode']
+            return self
+        except Exception as e:
+            raise FrameError(f"Load failed: {e}")
     def __enter__(self): 
         self.framer.__enter__()
         return self
@@ -336,8 +399,10 @@ if __name__ == '__main__':
         f.Var('y', 50)
         System.match('x > y', 'print("x bigger")', 'print("y bigger")')
         f.Var('test', Get('x') * Get('y')) 
-    code = f.compile()
-    print('result:', exec_and_return(code, 'test'))
+        f.save('ctx')
+    with Frame(safemode=False).load('ctx') as f:
+        code = f.compile()
+        print('result:', exec_and_return(code, 'test'))
     '''
     y bigger
     500
