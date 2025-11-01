@@ -1,6 +1,6 @@
 import threading
 
-__version__ = '0.2.3'
+__version__ = '0.2.5'
 
 
 
@@ -86,11 +86,34 @@ def Exec(framer = None):
     with System.lock:
         framer = System.framer if framer == None else framer
         return framer.execute()
+    
+class Frame:
+    def __init__(self, framer: str | Framer = 'new', name: str = 'f1'):
+        self.framer = Framer() if framer == 'new' else framer
+        System.framers[name] = self.framer
+    def Sys(self): 
+        return System
+    def Var(self, name, value, type: str = 'int', to_repr:bool = True):
+        return Var(name, value, type, to_repr, self.framer)
+    def Get(self, name: str): 
+        return Get(name, self.framer)
+    def Return(self, name: Var): 
+        return Return(name, self.framer)
+    def Code(self, code: str):
+        return Code(code, self.framer)
+    def Exec(self): 
+        return Exec(self.framer)
+    def __enter__(self): 
+        self.framer.__enter__()
+        return self
+    def __exit__(self, *args, **kwargs): pass
+
+
 
 Var('ver', __version__, framer=System.framers['basic'])
 
 if __name__ == '__main__':
-    with Framer() as f:
+    with Frame() as f:
         x = Var('x', 10)
         y = Var('y', 50)
         System.match('x > y', 'print("x bigger")', 'print("y bigger")')
