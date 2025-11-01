@@ -4,13 +4,13 @@ The Frame - multitool module for programming.
 
 Functions: 
     Framer functions -
-        Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @frmaing, framing_result
+        Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
         FramerError, FramingError
 '''
 
 from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
-                FramerError)
+                FramerError, FrameError, exec_and_return)
 
 
 def framing(
@@ -33,7 +33,7 @@ arg {return_frame}:  bool = False -
 - Args for choise create 'frame' variable (Frame object) in System.frames['temp'] .
 ### Example:
 ```
-@frame_dec(return_frame=True)
+@framing(return_frame=True)
 def test():
     print('test')
     return 10
@@ -42,6 +42,8 @@ res_frame = fGet('frame', fSys.framers['temp'])
 print(test(), res_frame)
 # geting result variable from decorator
 print(fGet('res', res_frame))
+# or just
+# print(framing_result(res_frame, test))
 ```
 - Output:
 ```
