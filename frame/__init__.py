@@ -2,10 +2,13 @@
 # Frame
 The Frame - multitool module for programming.
 
+
 Functions: 
     Framer functions -
-        Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
-        FramerError, FramingError
+        Frame, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
+        FramerError, FrameError, FramingError, 
+    Other functions - 
+        exec_and_return
 '''
 
 from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
@@ -31,7 +34,8 @@ arg {name_of_result_variable}:  str = 'res' -
     
 arg {return_frame}:  bool = False -
 - Args for choise create 'frame' variable (Frame object) in System.frames['temp'] .
-### Example:
+### Examples:
+#### First code example: 
 ```
 @framing(return_frame=True)
 def test():
@@ -45,9 +49,24 @@ print(fGet('res', res_frame))
 # or just
 # print(framing_result(res_frame, test))
 ```
-- Output:
+Output:
 ```
+test
 10 <frame.op.Framer object at 0x10ddf3d10>
+10
+```
+#### Second code example: 
+```
+ctx = Frame()
+@framing(ctx(), return_frame=True)
+def test():
+    print('test')
+    return 10
+print(framing_result(ctx, test))
+```
+Output:
+```
+test
 10
 ```
     '''
