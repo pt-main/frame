@@ -1,6 +1,6 @@
 import threading
 
-
+__version__ = '0.2.5'
 
 
 
@@ -50,10 +50,12 @@ class System:
     def match(condition: str, true_block: str, false_block: str = None, framer = None):
         framer = System.framer if framer == None else framer
         framer._new_code_line(f'if {condition}:')
-        framer._new_code_line(f'    {true_block.replace("\n", "; ")}')
+        true_block = true_block.replace("\n", "; ")
+        framer._new_code_line(f'    {true_block}')
         if false_block:
             framer._new_code_line('else:')
-            framer._new_code_line(f'    {false_block.replace("\n", "; ")}')
+            false_block = false_block.replace("\n", "; ")
+            framer._new_code_line(f'    {false_block}')
     def to_last():
         s = System.framer
         System.framer = System.last_framer
@@ -107,10 +109,12 @@ class Frame:
         self.framer.__enter__()
         return self
     def __exit__(self, *args, **kwargs): pass
+    def __call__(self, *args, **kwds):
+        return self.framer
 
 
 
-Var('name', 'frame', framer=System.framers['basic'])
+Var('ver', __version__, framer=System.framers['basic'])
 
 if __name__ == '__main__':
     with Frame() as f:
