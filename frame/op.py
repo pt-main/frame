@@ -1,6 +1,39 @@
 import threading
 
 
+def exec_and_return(code: str, 
+                    variable_name: str):
+    '''
+# Exec and return
+Execute code and return result of {variable name}.
+### Args:
+
+- {code}: str - full code.
+- {variable_name}: str - name of vatiable to return.
+
+### Uasge:
+Code:
+```
+simple_code = """
+x = 10
+y = 34
+res = x + y
+"""
+print('result:', exec_and_return(simple_code, 'res'))
+```
+Output:
+```
+result: 34
+```
+    '''
+    local_namespace = {}
+    try:
+        exec(code, globals(), local_namespace)
+        return local_namespace.get(variable_name)
+    except Exception as e:
+        print(f"Ошибка при выполнении кода: {e}")
+        return None
+
 
 class FramerError(Exception):
     def __init__(self, *args):
@@ -11,6 +44,13 @@ class FrameError(Exception):
 
 
 class Framer():
+    '''
+# Framer
+
+Main context manager class: Framer.
+
+For system.
+    '''
     def __init__(self):
         self._code = []
         self._vars = {}
@@ -21,7 +61,8 @@ class Framer():
         self._vars[name] = value
         return self
 
-    def op(self, a, b, operator: str = '+'):
+    def op(self, a, b, 
+           operator: str = '+'):
         result_var = f'__tmp_{len(self._code)}'
         res = f'{a} {operator} {b}'
         code_line = f'{result_var} = {res}'
@@ -49,10 +90,21 @@ class Framer():
 
 
 class System:
+    '''
+# System
+
+System context class: System.
+
+Has main [{framer}: Framer], [{last_framer}: Framer] and [{framers}: dict] self parameters.
+
+For system.'''
     framer: Framer = Framer()
     last_framer: Framer = framer
     framers: dict = {'basic': Framer(), 'temp': Framer()}
-    def match(condition: str, true_block: str, false_block: str = None, framer = None):
+    def match(condition: str, 
+              true_block: str, 
+              false_block: str = None, 
+              framer: Framer | None = None):
         framer = System.framer if framer == None else framer
         framer._new_code_line(f'if {condition}:')
         true_block = true_block.replace("\n", "; ")
@@ -66,52 +118,185 @@ class System:
         System.framer = System.last_framer
         System.last_framer = s
 class Var:
-    def __init__(self, name, value, type: str = 'int', to_repr: bool = True, framer = None):
+    '''
+# Variable
+
+Abstraction api class for [Framer] and [System].
+
+### Args:
+
+- {name}: str - name of variable.
+- {value}: Any - value of variable.
+- {type}: str - type hint for debug in code.
+- {to_repr}: bool - if true, value in variable will be repr(value).
+- {with_eval}: bool - if true, value in variable will be ```f'eval({repr(value)})'```.
+- {framer}: Framer | None - Framer object.
+
+
+### Example: 
+```
+ctx = Framer() # creating context
+Var('x', 10, framer = ctx) # setting variable
+```
+'''
+    def __init__(self, 
+                 name: str, 
+                 value, 
+                 type: str = 'int', 
+                 to_repr: bool = True, 
+                 with_eval: bool = False,
+                 framer: Framer | None = None):
         framer = System.framer if framer == None else framer
         param_name = f'__tmp_{len(framer._code)}'
         self.name = param_name
         self.value = value
+        to_repr = True if with_eval else to_repr
+        val = repr(value) if to_repr else value
+        val = f'eval({val})' if with_eval else val
         with framer._lock:
             framer.var(param_name, value)
-            framer._new_code_line(f'{name}: {type} = {repr(value) if to_repr else value}')
+            framer._new_code_line(f'{name}: {type} = {val}')
             framer._aliases[name] = param_name
-def Get(name: str, framer: Framer | None = None):
+def Get(name: str, 
+        framer: Framer | None = None):
+    '''Get variable by {name} from {framer} method.'''
     framer: Framer = System.framer if framer == None else framer
     return framer.get_thread_safe(name)
 class Return:
-    def __init__(self, value: Var, framer = None):
+    '''
+# Return
+ 
+Method to set variable to return with Exec() method.
+
+### Args: 
+- {value}: Var - Variable for return (object).
+- {framer}: Framer | None - Framer object.
+
+### Example: 
+Code:
+```
+with Frame() as f: # creating context
+    # setting variables
+    x = Var('x', 10)
+    y = Var('y', 50)
+    res = Var('test', Get('x') * Get('y')) 
+    Return(res) # setting variable to return
+print('result:', Exec()) # executing code
+```
+Output:
+```
+result: 500
+```'''
+    def __init__(self, 
+                 value: Var, 
+                 framer: Framer | None = None):
         framer = System.framer if framer == None else framer
         try: framer.var(f'__tmp_{len(framer._code) - 1}', f'{framer._vars.get(value.name)}')
         except AttributeError:
             raise FramerError(f'Exception in atribute parsing. \nObject [{value}, {type(value)}] has no atribute .name to create return. \nPlease, use [value] declaration like [`res = Var(...); Return(res, ...)`].')
 class Code:
-    def __init__(self, code: str, framer = None):
+    '''
+# Code append
+
+Method to append code in Framer.
+
+### Args:
+- {code}: str - code for paste to framer.
+- {framer}: Framer | None - framer object.
+
+### Example:
+Code:
+```
+with Frame() as f:
+    x = Var('x', 10)
+    y = Var('y', 50)
+    Code('result = x + y')
+    Var('test', Get('x') * Get('y')) 
+    Var('res', 'test + result', with_eval=True)
+print('result:', exec_and_return(f.compile(), 'res'))
+```
+Output:
+```
+result: 560
+```'''
+    def __init__(self, 
+                 code: str, 
+                 framer: Framer | None = None):
         framer = System.framer if framer == None else framer
         framer._new_code_line(code)
 def Exec(framer = None):
+    '''
+Execution of [Frame] method.
+    '''
     framer = System.framer if framer == None else framer
     with framer._lock:
         return framer.execute()
     
 class Frame:
-    def __init__(self, framer: str | Framer = 'new', safemode: bool = True, name: str = 'f1'):
+    '''
+# Frame
+Abstraction api for all [Framer] and [System] methods.
+
+(framer in functions is Frame.framer)
+
+### Args of initialization:
+- {framer}: str | Framer = 'new' - framer context object for frame.
+- {safemode}: bool - if safemode true, Exec method will be is not available.
+- name: str - framer name in [System.framers]
+
+### Example usage:
+Code:
+```
+with Frame(safemode=False) as f:
+    f.Var('x', 10)
+    f.Var('y', 50)
+    System.match('x > y', 'print("x bigger")', 'print("y bigger")')
+    f.Var('test', Get('x') * Get('y')) 
+code = f.compile()
+print('result:', exec_and_return(code, 'test'))
+```
+Output:
+```
+y bigger
+result: 500
+```'''
+    def __init__(self, 
+                 framer: str | Framer = 'new', 
+                 safemode: bool = True, 
+                 name: str = 'f1'):
         self.framer = Framer() if framer == 'new' else framer
         self.__safemode = safemode
         System.framers[name] = self.framer
     def Sys(self): 
+        '''Return [System] class.'''
         return System
-    def Var(self, name, value, type: str = 'int', to_repr:bool = True):
-        return Var(name, value, type, to_repr, self.framer)
+    def Var(self, 
+            name: str, 
+            value, 
+            type: str = 'int', 
+            to_repr: bool = True,
+            with_eval: bool = False):
+        '''Creating variable.'''
+        return Var(name, value, type, to_repr, with_eval, self.framer)
     def Get(self, name: str): 
+        '''Get variable by name.'''
         return Get(name, self.framer)
     def Return(self, name: Var): 
+        '''Set of variable to return.'''
         return Return(name, self.framer)
     def Code(self, code: str):
+        '''Append code to frame.'''
         return Code(code, self.framer)
     def Exec(self):
+        '''Executing code of frame.'''
         if not self.__safemode: return Exec(self.framer)
         else: raise FrameError('Exec is not avialable in safemode.')
-    def reset(self): self.framer = Framer()
+    def compile(self): 
+        '''Get full code of frame.'''
+        return '\n'.join(self.framer._code)
+    def reset(self): 
+        '''Recreate framer.'''
+        self.framer = Framer()
     def __enter__(self): 
         self.framer.__enter__()
         return self
@@ -131,3 +316,34 @@ if __name__ == '__main__':
         res = Var('test', Get('x') * Get('y')) 
         Return(res)  
     print(Exec())  # → 500
+    with Frame() as f:
+        x = Var('x', 10)
+        y = Var('y', 50)
+        res = Var('res', 'x + y', with_eval=True)
+        Return(res)
+    print(Exec())
+    code = f.compile()
+    print(exec_and_return(code, 'res')) # 60
+    with Frame() as f:
+        x = Var('x', 10)
+        y = Var('y', 50)
+        Code('result = x + y')
+        Var('test', Get('x') * Get('y')) 
+        Var('res', 'test + result', with_eval=True)
+    print(exec_and_return(f.compile(), 'res')) # 560
+    with Frame(safemode=False) as f:
+        f.Var('x', 10)
+        f.Var('y', 50)
+        System.match('x > y', 'print("x bigger")', 'print("y bigger")')
+        f.Var('test', Get('x') * Get('y')) 
+    code = f.compile()
+    print('result:', exec_and_return(code, 'test'))
+    '''
+    y bigger
+    500
+    x + y
+    60
+    560
+    y bigger
+    result: 500
+    '''
