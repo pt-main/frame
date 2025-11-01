@@ -1,6 +1,6 @@
 import threading
 
-__version__ = '0.2.5'
+
 
 
 
@@ -110,7 +110,7 @@ class Frame:
 
 
 
-Var('ver', __version__, framer=System.framers['basic'])
+Var('name', 'frame', framer=System.framers['basic'])
 
 if __name__ == '__main__':
     with Frame() as f:
