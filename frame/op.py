@@ -5,6 +5,9 @@ import threading
 class FramerError(Exception):
     def __init__(self, *args):
         super().__init__(*args)
+class FrameError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
 class Framer():
@@ -12,6 +15,7 @@ class Framer():
         self._code = []
         self._vars = {}
         self._aliases = {}
+        self._lock = threading.RLock()
     
     def var(self, name:str, value):
         self._vars[name] = value
@@ -31,6 +35,10 @@ class Framer():
         exec(compiled, {}, local_scope)
         return local_scope.get(f"__tmp_{len(self._code)-1}") 
     
+    def get_thread_safe(self, name):
+        with self._lock:
+            return self._vars.get(self._aliases[name])
+    
     def _new_code_line(self, line: str): self._code.append(line)
 
     def __enter__(self):
@@ -44,7 +52,6 @@ class System:
     framer: Framer = Framer()
     last_framer: Framer = framer
     framers: dict = {'basic': Framer(), 'temp': Framer()}
-    lock = threading.Lock()
     def match(condition: str, true_block: str, false_block: str = None, framer = None):
         framer = System.framer if framer == None else framer
         framer._new_code_line(f'if {condition}:')
@@ -64,14 +71,13 @@ class Var:
         param_name = f'__tmp_{len(framer._code)}'
         self.name = param_name
         self.value = value
-        with System.lock:
+        with framer._lock:
             framer.var(param_name, value)
             framer._new_code_line(f'{name}: {type} = {repr(value) if to_repr else value}')
             framer._aliases[name] = param_name
-def Get(name: str, framer = None):
-    with System.lock:
-        framer: Framer = System.framer if framer == None else framer
-        return framer._vars.get(framer._aliases[name])
+def Get(name: str, framer: Framer | None = None):
+    framer: Framer = System.framer if framer == None else framer
+    return framer.get_thread_safe(name)
 class Return:
     def __init__(self, value: Var, framer = None):
         framer = System.framer if framer == None else framer
@@ -83,13 +89,14 @@ class Code:
         framer = System.framer if framer == None else framer
         framer._new_code_line(code)
 def Exec(framer = None):
-    with System.lock:
-        framer = System.framer if framer == None else framer
+    framer = System.framer if framer == None else framer
+    with framer._lock:
         return framer.execute()
     
 class Frame:
-    def __init__(self, framer: str | Framer = 'new', name: str = 'f1'):
+    def __init__(self, framer: str | Framer = 'new', safemode: bool = True, name: str = 'f1'):
         self.framer = Framer() if framer == 'new' else framer
+        self.__safemode = safemode
         System.framers[name] = self.framer
     def Sys(self): 
         return System
@@ -101,8 +108,10 @@ class Frame:
         return Return(name, self.framer)
     def Code(self, code: str):
         return Code(code, self.framer)
-    def Exec(self): 
-        return Exec(self.framer)
+    def Exec(self):
+        if not self.__safemode: return Exec(self.framer)
+        else: raise FrameError('Exec is not avialable in safemode.')
+    def reset(self): self.framer = Framer()
     def __enter__(self): 
         self.framer.__enter__()
         return self
