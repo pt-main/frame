@@ -9,7 +9,7 @@ Functions:
 '''
 
 from .op import __version__
-from .op import (Framer, Exec as fExec, Get as fGet, Var as fVar, 
+from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
                 FramerError)
 
