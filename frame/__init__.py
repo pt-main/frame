@@ -4,25 +4,33 @@ The Frame - multitool module for programming.
 
 
 ### Functions: 
-    Framer functions -
-        Frame (keyclass), Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
-        FramerError, FrameError, FramingError
-    Plugin functions - 
+    #### Framer functions -
+        Frame (keyclass), Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
+        framing_result
+    #### Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
-    Other functions - 
+    #### Other functions - 
         exec_and_return_safe (keyfunction), exec_and_return, str_to_int
+    #### Errors - 
+        FrameApiError, FramerError, FramingError, FrameExecutionError, PluginError, 
+        PluginIsNotWorkingError
 
         
 ### Warning: 
 Main clases of frame (like [Framer], for example) using eval/compile/exec. 
 
 If you want to protect your porgram (full off exec), you can use {safemode} in Frame.
+
+Not for web development.
 '''
 
 from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode)
 from .funcs import (str_to_int, exec_and_return_safe, exec_and_return, 
-                    FrameApiError, FramerError, FramingError)
+                    FrameApiError, FramerError, FramingError, FrameExecutionError, 
+                    PluginError, PluginIsNotWorkingError)
+
+
 
 def framing(
     framer: str | Framer = 'new',
