@@ -128,4 +128,4 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
     return resg
 
 
-from .plugins import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
+from .plugins_system import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
