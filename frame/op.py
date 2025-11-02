@@ -109,13 +109,18 @@ For system.'''
               false_block: str = None, 
               framer: Framer | None = None):
         framer = System.framer if framer == None else framer
-        framer._new_code_line(f'if {condition}:')
-        true_block = true_block.replace("\n", "; ")
-        framer._new_code_line(f'    {true_block}')
+        Var('_condition', condition, with_eval=True, framer=framer)
+        framer._new_code_line(f'if _condition:')
+        new_true_block = ''
+        for i in true_block.split('\n'):
+            if i.strip() != '': new_true_block += '\n    ' + i
+        framer._new_code_line(f'    {new_true_block}')
         if false_block:
             framer._new_code_line('else:')
-            false_block = false_block.replace("\n", "; ")
-            framer._new_code_line(f'    {false_block}')
+            new_false_block = ''
+            for i in false_block.split('\n'):
+                if i.strip() != '': new_false_block += '\n    ' + i
+            framer._new_code_line(f'    {new_false_block}')
     def to_last():
         s = System.framer
         System.framer = System.last_framer
@@ -276,8 +281,9 @@ result: 500
         self.__saving = [save_while_exit, save_args]
         self.framer = Framer() if framer == 'new' else framer
         self.__safemode = safemode
+        self._name = name
         System.framers[name] = self.framer
-    def Sys(self): 
+    def Sys(self) -> System: 
         '''Return [System] class.'''
         return System
     def Var(self, 
@@ -285,29 +291,30 @@ result: 500
             value, 
             type: str = 'int', 
             to_repr: bool = True,
-            with_eval: bool = False):
+            with_eval: bool = False) -> Var:
         '''Creating variable.'''
         return Var(name, value, type, to_repr, with_eval, self.framer)
-    def Get(self, name: str): 
+    def Get(self, name: str) -> Any: 
         '''Get variable by name.'''
         return Get(name, self.framer)
-    def Return(self, name: Var): 
+    def Return(self, name: Var) -> Return: 
         '''Set of variable to return.'''
         return Return(name, self.framer)
-    def Code(self, code: str):
+    def Code(self, code: str) -> Code:
         '''Append code to frame.'''
         return Code(code, self.framer)
-    def Exec(self):
+    def Exec(self) -> Any:
         '''Executing code of frame.'''
         if not self.__safemode: return Exec(self.framer)
         else: raise FrameError('Exec is not avialable in safemode.')
-    def compile(self): 
+    def compile(self) -> str: 
         '''Get full code of frame.'''
         return '\n'.join(self.framer._code)
-    def reset(self): 
+    def reset(self) -> Frame: 
         '''Recreate framer.'''
         self.framer = Framer()
-    def save(self, filename: str, format: str = 'pickle'):
+        return self
+    def save(self, filename: str, format: str = 'pickle') -> Frame:
         '''
         ## Saving frame to file.
         ### Args:
@@ -321,7 +328,8 @@ result: 500
                 '_aliases': self.framer._aliases
             },
             'saving': self.__saving,
-            'safemode': self.__safemode
+            'safemode': self.__safemode,
+            'name': self._name
         }
         try:
             if format == 'pickle':
@@ -334,15 +342,17 @@ result: 500
                         '_aliases': data['framer']['_aliases']
                     },
                     'safemode': data['safemode'],
-                    'saving': data['saving']
+                    'saving': data['saving'],
+                    'name': data['name']
                 }
                 with open(filename, 'w', encoding='utf-8') as f: 
                     json.dump(json_data, f, indent=2, ensure_ascii=False)
             else: raise FrameError(f"Unsupported format: {format}")
+            return self
         except Exception as e:
             raise FrameError(f"Save failed: {e}")
 
-    def load(self, filename: str, format: str = 'pickle'):
+    def load(self, filename: str = 'ctx', format: str = 'pickle') -> Frame:
         '''
         ## Loading frame from file.
         ### Args:
@@ -364,7 +374,8 @@ result: 500
             self.framer._vars = data['framer']['_vars'] 
             self.framer._aliases = data['framer']['_aliases']
             self.__safemode = data['safemode']
-            self.__safemode = data['saving']
+            self.__saving = data['saving']
+            self._name = data['name']
             return self
         except Exception as e:
             raise FrameError(f"Load failed: {e}")
@@ -403,12 +414,13 @@ if __name__ == '__main__':
         Var('test', Get('x') * Get('y')) 
         Var('res', 'test + result', with_eval=True)
     print(exec_and_return(f.compile(), 'res')) # 560
-    with Frame(save_while_exit=True) as f:
+
+    with Frame(save_while_exit=True, save_args=['ctx.json', 'json']) as f:
         f.Var('x', 10)
         f.Var('y', 50)
         System.match('x > y', 'print("x bigger")', 'print("y bigger")')
         f.Var('test', Get('x') * Get('y')) 
-    with Frame().load('ctx', 'pickle') as f:
+    with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
     '''
