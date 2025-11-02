@@ -19,7 +19,7 @@ Main clases of frame (like [Framer], for example) using eval/compile/exec.
 If you want to protect your porgram (full off exec), you can use {safemode} in Frame.
 '''
 
-from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
+from .framing import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode,
                 FramerError, FrameError, exec_and_return)
 
