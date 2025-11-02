@@ -26,9 +26,8 @@ Not for web development.
 
 from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode)
-from .funcs import (str_to_int, exec_and_return_safe, exec_and_return, 
-                    FrameApiError, FramerError, FramingError, FrameExecutionError, 
-                    PluginError, PluginIsNotWorkingError)
+from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
+from .exceptions import *
 
 
 
