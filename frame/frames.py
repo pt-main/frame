@@ -2,49 +2,11 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
+from .funcs import *
+import ast
 
-
-def exec_and_return(code: str, 
-                    variable_name: str):
-    '''
-# Exec and return
-Execute code and return result of {variable name}.
-### Args:
-
-- {code}: str - full code.
-- {variable_name}: str - name of vatiable to return.
-
-### Uasge:
-Code:
-```
-simple_code = """
-x = 10
-y = 34
-res = x + y
-"""
-print('result:', exec_and_return(simple_code, 'res'))
-```
-Output:
-```
-result: 34
-```
-    '''
-    local_namespace = {}
-    try:
-        exec(code, globals(), local_namespace)
-        return local_namespace.get(variable_name)
-    except Exception as e:
-        print(f"Error in code running: {e}")
-        return None
-
-
-class FramerError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
-class FrameError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
-
+def sec_eval(*args):
+    return ast.literal_eval(*args)
 
 class Framer():
     '''
@@ -55,7 +17,10 @@ Main context manager class: Framer.
 For system.
     '''
     def __init__(self):
-        self._code = []
+        std = '''
+import ast
+'''
+        self._code = [std]
         self._vars = {}
         self._aliases = {}
         self._lock = threading.RLock()
@@ -80,8 +45,7 @@ For system.
         return local_scope.get(f"__tmp_{len(self._code)-1}") 
     
     def get_thread_safe(self, name):
-        with self._lock:
-            return self._vars.get(self._aliases[name])
+        with self._lock: return self._vars.get(self._aliases[name])
     
     def _new_code_line(self, line: str): self._code.append(line)
 
@@ -171,6 +135,7 @@ def Get(name: str,
     '''Get variable by {name} from {framer} method.'''
     framer: Framer = System.framer if framer == None else framer
     return framer.get_thread_safe(name)
+
 class Return:
     '''
 # Return
@@ -234,6 +199,7 @@ result: 560
         framer = System.framer if framer == None else framer
         framer._new_code_line(code)
         self._code = code
+
 def Exec(framer = None):
     '''
 Execution of [Frame] method.
@@ -308,7 +274,7 @@ result: 500
     def Exec(self) -> Any:
         '''Executing code of frame.'''
         if not self.__safemode: return Exec(self.framer)
-        else: raise FrameError('Exec is not avialable in safemode.')
+        else: raise FrameApiError('Exec is not avialable in safemode.')
     def compile(self) -> str: 
         '''Get full code of frame.'''
         return '\n'.join(self.framer._code)
@@ -349,10 +315,10 @@ result: 500
                 }
                 with open(filename, 'w', encoding='utf-8') as f: 
                     json.dump(json_data, f, indent=2, ensure_ascii=False)
-            else: raise FrameError(f"Unsupported format: {format}")
+            else: raise FrameApiError(f"Unsupported format: {format}")
             return self
         except Exception as e:
-            raise FrameError(f"Save failed: {e}")
+            raise FrameApiError(f"Save failed: {e}")
 
     def load(self, filename: str = 'ctx', format: str = 'pickle') -> Frame:
         '''
@@ -368,10 +334,10 @@ result: 500
                 with open(filename, 'r', encoding='utf-8') as f: data = json.load(f)
                 restored_vars = {}
                 for k, v in data['framer']['_vars'].items():
-                    try: restored_vars[k] = eval(v)
+                    try: restored_vars[k] = ast.literal_eval(v)
                     except: restored_vars[k] = v
                 data['framer']['_vars'] = restored_vars
-            else: raise FrameError(f"Unsupported format: {format}")
+            else: raise FrameApiError(f"Unsupported format: {format}")
             self.framer._code = data['framer']['_code']
             self.framer._vars = data['framer']['_vars'] 
             self.framer._aliases = data['framer']['_aliases']
@@ -380,7 +346,7 @@ result: 500
             self._name = data['name']
             return self
         except Exception as e:
-            raise FrameError(f"Load failed: {e}")
+            raise FrameApiError(f"Load failed: {e}")
     def _get_safemode(self): return self.__safemode
     def __enter__(self): 
         self.framer.__enter__()
