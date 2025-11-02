@@ -6,11 +6,9 @@ from typing import Dict, Any
 from .funcs import *
 import ast
 
-def sec_eval(*args):
-    return ast.literal_eval(*args)
-
 
 class _CodeGenerator:
+    '''Basic system engine for code generation.'''
     def __init__(self):
         self._code = []
         self._cache = 0
@@ -22,6 +20,10 @@ class _CodeGenerator:
         var_name = f'__tmp_{self._cache - k}'
         self._cache += 1
         return var_name
+    def _gen_id(self, k: int = 0):
+        id = f'_idvalue_{self._cache * k}{k}'
+        self._cache += 1
+        return id
 
 
 class Framer(_CodeGenerator):
@@ -74,7 +76,7 @@ For system.
 
 
 
-class System:
+class SystemClass:
     '''
 # System
 
@@ -83,15 +85,28 @@ System context class: System.
 Has main [{framer}: Framer], [{last_framer}: Framer] and [{framers}: dict] self parameters.
 
 For system.'''
-    framer: Framer = Framer()
-    last_framer: Framer = framer
-    framers: dict = {'basic': Framer(), 'temp': Framer()}
+    def __init__(self):
+        self.framer = Framer()
+        self.last_framer = self.framer
+        self.framers = {'basic': Framer(), 'temp': Framer()}
+    
+    @classmethod
+    def get_global(cls):
+        if not hasattr(cls, '_global'):
+            cls._global = cls()
+        return cls._global
+
+class SystemOP:
+    '''
+    # System operations
+    Basic simple api for [System] and [Framer].
+    '''
     def match(condition: str, 
               true_block: str, 
               false_block: str = None, 
               framer: Framer | None = None):
         framer = System.framer if framer == None else framer
-        cache = framer._gen_temp_var()
+        cache = framer._gen_id(len(framer._aliases) + len(framer._code))
         Var(f'__condition_temp{cache}', condition, with_eval=True, framer=framer)
         framer._new_code_line(f'if __condition_temp{cache}:')
         new_true_block = ''
@@ -108,6 +123,10 @@ For system.'''
         s = System.framer
         System.framer = System.last_framer
         System.last_framer = s
+
+
+System = SystemClass().get_global()
+
 
 class Var:
     '''
@@ -253,7 +272,7 @@ Code:
 with Frame(safemode=False) as f:
     f.Var('x', 10)
     f.Var('y', 50)
-    System.match('x > y', 'print("x bigger")', 'print("y bigger")')
+    SystemOP.match('x > y', 'print("x bigger")', 'print("y bigger")')
     f.Var('test', Get('x') * Get('y')) 
 code = f.compile()
 print('result:', exec_and_return(code, 'test'))
@@ -274,9 +293,15 @@ result: 500
         self.__safemode = safemode
         self._name = name
         System.framers[name] = self.framer
-    def Sys(self) -> System: 
+    def Sys(self) -> SystemOP: 
+        '''Return [System] class.'''
+        return SystemOP
+    def System(self) -> SystemClass: 
         '''Return [System] class.'''
         return System
+    def set_System(self, new_sys: SystemClass = SystemClass()) -> SystemClass:
+        global System
+        System = new_sys
     def Var(self, 
             name: str, 
             value, 
@@ -343,7 +368,7 @@ result: 500
         except Exception as e:
             raise FrameApiError(f"Save failed: {e}")
 
-    def load(self, filename: str = 'ctx', format: str = 'pickle') -> Frame:
+    def load(self, filename: str = 'ctx', format: str = 'pickle', local_safemode: bool = True) -> Frame:
         '''
         ## Loading frame from file.
         ### Args:
@@ -358,7 +383,13 @@ result: 500
                 restored_vars = {}
                 for k, v in data['framer']['_vars'].items():
                     try: restored_vars[k] = ast.literal_eval(v)
-                    except: restored_vars[k] = v
+                    except: 
+                        try:
+                            if not self.__safemode or not local_safemode: 
+                                restored_vars[k] = eval(v)
+                            else: restored_vars[k] = v
+                        except Exception as e: 
+                            raise FrameApiError(f'Error in parsing parameters: {e}')
                 data['framer']['_vars'] = restored_vars
             else: raise FrameApiError(f"Unsupported format: {format}")
             self.framer._code = data['framer']['_code']
@@ -387,7 +418,7 @@ if __name__ == '__main__':
     with Frame() as f:
         x = Var('x', 10)
         y = Var('y', 50)
-        System.match('x > y', 'print("x bigger")', 'print("y bigger")')
+        SystemOP.match('x > y', 'print("x bigger")', 'print("y bigger")')
         res = Var('test', Get('x') * Get('y')) 
         Return(res)  
     print(Exec())  # → 500
@@ -410,7 +441,7 @@ if __name__ == '__main__':
     with Frame(save_while_exit=True, save_args=['ctx.json', 'json']) as f:
         f.Var('x', 10)
         f.Var('y', 50)
-        System.match('x > y', 'print("x bigger")', 'print("y bigger")')
+        SystemOP.match('x > y', 'print("x bigger")', 'print("y bigger")')
         f.Var('test', Get('x') * Get('y')) 
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
