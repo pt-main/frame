@@ -115,3 +115,6 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
     resg = fGet(name_of_result_variable, framer)
     if resf != resg: raise FramingError(f'Variable [{name_of_result_variable}] is not found in Frame[{framer}].')
     return resg
+
+
+from .plugins import (PluginBase)
