@@ -5,10 +5,10 @@ The Frame - multitool module for programming.
 
 ### Functions: 
     Framer functions -
-        Frame, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
+        Frame (keyclass), Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
         FramerError, FrameError, FramingError
     Plugin functions - 
-        PluginBase (metaclass), MathPlugin
+        PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
     Other functions - 
         exec_and_return, str_to_int
 
@@ -125,5 +125,5 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
     return resg
 
 
-from .plugins import (PluginBase, MathPlugin)
+from .plugins import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
 from .funcs import (str_to_int)
