@@ -10,7 +10,7 @@ The Frame - multitool module for programming.
     Plugin functions - 
         PluginBase (metaclass), MathPlugin
     Other functions - 
-        exec_and_return
+        exec_and_return, str_to_int
 
         
 ### Warning: 
@@ -126,3 +126,4 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 
 
 from .plugins import (PluginBase, MathPlugin)
+from .funcs import (str_to_int)
