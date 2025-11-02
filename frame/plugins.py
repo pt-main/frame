@@ -1,5 +1,5 @@
 from abc import ABC
-from .op import Frame, exec_and_return
+from .framing import Frame, exec_and_return
 import math, cmath, random
 
 class PluginIsNotWorkingError(Exception):
