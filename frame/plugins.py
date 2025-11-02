@@ -1,14 +1,8 @@
 from abc import ABC
-from .frames import Frame, exec_and_return
-import math, cmath, random
+from .frames import Frame, exec_and_return, PluginIsNotWorkingError, PluginError
+import math, cmath, random, importlib
 
-class PluginIsNotWorkingError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
 
-class PluginError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
 
 
 class PluginBase(ABC):
@@ -28,7 +22,7 @@ class PluginBase(ABC):
             self._state['included'] = True
     def _check_dependencies(self):
         for dep in self._dependencies:
-            try: exec(f'import {dep}')
+            try: importlib.import_module(dep)
             except ImportError:
                 PluginError(f'Dependencies error: {dep} is not installed.')
     def _check(self):
@@ -46,7 +40,7 @@ class PluginRegistry:
         cls._plugins[name] = plugin_class
     
     @classmethod
-    def get_plugin(cls, name, frame):
+    def get_plugin(cls, name, frame) -> type[PluginRegistry]:
         return cls._plugins[name](frame)
     
     @classmethod
@@ -128,7 +122,7 @@ __temp_x2_math{cache} = (-__temp_b_math{cache} - __temp_sqrt_D_math{cache}) / (2
         super()._check()
         if self._state['safemode']: raise PluginError('Your frame in safemode. \nMath operations works only without safemode: code execution must be available.')
     
-    def _cache(self): self._counter += 1; return self._counter
+    def _cache(self): self._counter += 1; return str(self._counter) + self.frame.framer._gen_id(self._counter)
 
     def _operand(self, x: int | float, 
                  name_of_result_variable: str = 'res', 
