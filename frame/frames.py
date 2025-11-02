@@ -1,3 +1,4 @@
+
 import threading
 import pickle
 import json
@@ -8,7 +9,22 @@ import ast
 def sec_eval(*args):
     return ast.literal_eval(*args)
 
-class Framer():
+
+class _CodeGenerator:
+    def __init__(self):
+        self._code = []
+        self._cache = 0
+    def _new_line(self, text: str): 
+        self._code.append(text)
+        self._cache += 1
+        return self
+    def _gen_temp_var(self, k: int = 0):
+        var_name = f'__tmp_{self._cache - k}'
+        self._cache += 1
+        return var_name
+
+
+class Framer(_CodeGenerator):
     '''
 # Framer
 
@@ -17,13 +33,11 @@ Main context manager class: Framer.
 For system.
     '''
     def __init__(self):
-        std = '''
-import ast
-'''
-        self._code = [std]
+        super().__init__()
         self._vars = {}
         self._aliases = {}
         self._lock = threading.RLock()
+        self._new_code_line = self._new_line
     
     def var(self, name:str, value):
         self._vars[name] = value
@@ -31,29 +45,33 @@ import ast
 
     def op(self, a, b, 
            operator: str = '+'):
-        result_var = f'__tmp_{len(self._code)}'
+        result_var = self._gen_temp_var()
         res = f'{a} {operator} {b}'
         code_line = f'{result_var} = {res}'
         self._code.append(code_line)
         return result_var
     
     def execute(self):
-        final_code = "\n".join(self._code)
-        local_scope = self._vars.copy()
-        compiled = compile(final_code, '<string>', 'exec')
-        exec(compiled, {}, local_scope)
-        return local_scope.get(f"__tmp_{len(self._code)-1}") 
+        try:
+            final_code = "\n".join(self._code)
+            local_scope = self._vars.copy()
+            compiled = compile(final_code, '<string>', 'exec')
+            exec(compiled, {}, local_scope)
+            return_var = "__frame_return_value"
+            return local_scope.get(return_var) 
+        except Exception as e:
+            raise FrameExecutionError(f"Error in frame execution: {e}\nCode:\n{final_code}")
     
     def get_thread_safe(self, name):
         with self._lock: return self._vars.get(self._aliases[name])
-    
-    def _new_code_line(self, line: str): self._code.append(line)
 
     def __enter__(self):
         System.last_framer = System.framer
         System.framer = self
         return self
     def __exit__(self, *args, **kwargs): pass
+
+
 
 
 class System:
@@ -73,7 +91,7 @@ For system.'''
               false_block: str = None, 
               framer: Framer | None = None):
         framer = System.framer if framer == None else framer
-        cache = len(framer._code)+len(System.framers)
+        cache = framer._gen_temp_var()
         Var(f'__condition_temp{cache}', condition, with_eval=True, framer=framer)
         framer._new_code_line(f'if __condition_temp{cache}:')
         new_true_block = ''
@@ -90,6 +108,7 @@ For system.'''
         s = System.framer
         System.framer = System.last_framer
         System.last_framer = s
+
 class Var:
     '''
 # Variable
@@ -118,9 +137,9 @@ Var('x', 10, framer = ctx) # setting variable
                  type: str = 'int', 
                  to_repr: bool = True, 
                  with_eval: bool = False,
-                 framer: Framer | None = None):
-        framer = System.framer if framer == None else framer
-        param_name = f'__tmp_{len(framer._code)}'
+                 framer: Framer | None | str = 'System'):
+        framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
+        param_name = framer._gen_temp_var()
         self.name = param_name
         self.value = value
         to_repr = True if with_eval else to_repr
@@ -128,12 +147,13 @@ Var('x', 10, framer = ctx) # setting variable
         val = f'eval({val})' if with_eval else val
         with framer._lock:
             framer.var(param_name, value)
-            framer._new_code_line(f'{name}: {type} = {val}')
+            framer._new_line(f'{name}: {type} = {val}')
             framer._aliases[name] = param_name
+        self.framer = framer
 def Get(name: str, 
-        framer: Framer | None = None):
+        framer: Framer | None | str = 'System'):
     '''Get variable by {name} from {framer} method.'''
-    framer: Framer = System.framer if framer == None else framer
+    framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
     return framer.get_thread_safe(name)
 
 class Return:
@@ -163,11 +183,13 @@ result: 500
 ```'''
     def __init__(self, 
                  value: Var, 
-                 framer: Framer | None = None):
-        framer = System.framer if framer == None else framer
-        try: framer.var(f'__tmp_{len(framer._code) - 1}', f'{framer._vars.get(value.name)}')
+                 framer: Framer | None | str = 'System'):
+        framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
+        return_var = "__frame_return_value"
+        try: framer.var(return_var, f'{framer._vars.get(value.name)}')
         except AttributeError:
             raise FramerError(f'Exception in atribute parsing. \nObject [{value}, {type(value)}] has no atribute .name to create return. \nPlease, use [value] declaration like [`res = Var(...); Return(res, ...)`].')
+        self.framer = framer
 class Code:
     '''
 # Code append
@@ -195,16 +217,17 @@ result: 560
 ```'''
     def __init__(self, 
                  code: str, 
-                 framer: Framer | None = None):
-        framer = System.framer if framer == None else framer
+                 framer: Framer | None | str = 'System'):
+        framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
         framer._new_code_line(code)
         self._code = code
+        self.framer = framer
 
-def Exec(framer = None):
+def Exec(framer: Framer | None | str = 'System'):
     '''
 Execution of [Frame] method.
     '''
-    framer = System.framer if framer == None else framer
+    framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
     with framer._lock:
         return framer.execute()
     
