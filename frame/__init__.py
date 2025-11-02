@@ -10,7 +10,7 @@ The Frame - multitool module for programming.
     Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
     Other functions - 
-        exec_and_return, str_to_int
+        exec_and_return_safe (keyfunction), exec_and_return, str_to_int
 
         
 ### Warning: 
@@ -19,10 +19,10 @@ Main clases of frame (like [Framer], for example) using eval/compile/exec.
 If you want to protect your porgram (full off exec), you can use {safemode} in Frame.
 '''
 
-from .framing import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
-                System as fSys, Return as fReturn, Code as fCode,
-                FramerError, FrameError, exec_and_return)
-
+from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
+                System as fSys, Return as fReturn, Code as fCode)
+from .funcs import (str_to_int, exec_and_return_safe, exec_and_return, 
+                    FrameApiError, FramerError, FramingError)
 
 def framing(
     framer: str | Framer = 'new',
@@ -90,10 +90,6 @@ test
     return decorator
 
 
-
-class FramingError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
     
 def framing_result(framer: Framer, func: object, name_of_result_variable: str = 'res', *func_args, **func_kwargs):
     '''
@@ -126,4 +122,3 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 
 
 from .plugins import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
-from .funcs import (str_to_int)
