@@ -3,12 +3,20 @@
 The Frame - multitool module for programming.
 
 
-Functions: 
+### Functions: 
     Framer functions -
         Frame, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, framing_result
-        FramerError, FrameError, FramingError, 
+        FramerError, FrameError, FramingError
+    Plugin functions - 
+        PluginBase (metaclass), MathPlugin
     Other functions - 
         exec_and_return
+
+        
+### Warning: 
+Main clases of frame (like [Framer], for example) using eval/compile/exec. 
+
+If you want to protect your porgram (full off exec), you can use {safemode} in Frame.
 '''
 
 from .op import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
@@ -117,4 +125,4 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
     return resg
 
 
-from .plugins import (PluginBase)
+from .plugins import (PluginBase, MathPlugin)
