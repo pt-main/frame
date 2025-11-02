@@ -34,7 +34,7 @@ result: 34
         exec(code, globals(), local_namespace)
         return local_namespace.get(variable_name)
     except Exception as e:
-        print(f"Ошибка при выполнении кода: {e}")
+        print(f"Error in code running: {e}")
         return None
 
 
@@ -109,8 +109,9 @@ For system.'''
               false_block: str = None, 
               framer: Framer | None = None):
         framer = System.framer if framer == None else framer
-        Var('_condition', condition, with_eval=True, framer=framer)
-        framer._new_code_line(f'if _condition:')
+        cache = len(framer._code)+len(System.framers)
+        Var(f'__condition_temp{cache}', condition, with_eval=True, framer=framer)
+        framer._new_code_line(f'if __condition_temp{cache}:')
         new_true_block = ''
         for i in true_block.split('\n'):
             if i.strip() != '': new_true_block += '\n    ' + i
@@ -232,6 +233,7 @@ result: 560
                  framer: Framer | None = None):
         framer = System.framer if framer == None else framer
         framer._new_code_line(code)
+        self._code = code
 def Exec(framer = None):
     '''
 Execution of [Frame] method.
@@ -379,6 +381,7 @@ result: 500
             return self
         except Exception as e:
             raise FrameError(f"Load failed: {e}")
+    def _get_safemode(self): return self.__safemode
     def __enter__(self): 
         self.framer.__enter__()
         return self
