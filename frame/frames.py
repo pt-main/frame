@@ -3,7 +3,8 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
-from .funcs import *
+from .exceptions import *
+from .funcs import exec_and_return
 import ast
 
 
