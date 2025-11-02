@@ -5,6 +5,7 @@ import math, cmath, random, importlib
 
 
 
+
 class PluginBase(ABC):
     def __init__(self, frame: Frame | None = None):
         self.frame = frame
