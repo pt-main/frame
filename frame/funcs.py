@@ -1,6 +1,12 @@
 import builtins
 import sys
-import resource
+from abc import ABC
+try:
+    import resource
+    resource_available = True
+except:
+    resource = ABC()
+    resource_available = False
 from collections.abc import Mapping
 
 
@@ -92,16 +98,17 @@ print('result:', exec_and_return_safe(simple_code, 'res'))
             return len(self._builtins)
 
     def set_limits():
-        # Set memory limit (50 MB)
-        resource.setrlimit(
-            resource.RLIMIT_AS,
-            (50 * 1024 * 1024, 50 * 1024 * 1024)
-        )
-        # Set CPU time limit (5 seconds)
-        resource.setrlimit(
-            resource.RLIMIT_CPU,
-            (5, 5)
-        )
+        if resource_available:
+            # Set memory limit (50 MB)
+            resource.setrlimit(
+                resource.RLIMIT_AS,
+                (50 * 1024 * 1024, 50 * 1024 * 1024)
+            )
+            # Set CPU time limit (5 seconds)
+            resource.setrlimit(
+                resource.RLIMIT_CPU,
+                (5, 5)
+            )
 
     def safe_exec(code, globals_dict):
         # Replace dangerous builtins
