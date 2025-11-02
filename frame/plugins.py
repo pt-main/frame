@@ -16,18 +16,23 @@ class PluginBase(ABC):
         self.frame = frame
         self._has_frame = isinstance(frame, Frame)
         super().__init__()
-    def _check_dependencies(self, deps: list = []):
-        for dep in deps:
-            try: exec(f'import {dep}')
-            except ImportError:
-                PluginError(f'Dependencies error: {dep} is not installed.')
+        self._dependencies = []
+        self._state = {'included': False}
     def work(self):
         '''Main plugin method.'''
         raise PluginIsNotWorkingError
     def include(self):
         '''Include plugin to [Frame] method.'''
         self._check_dependencies()
-        raise PluginIsNotWorkingError
+        if not self._state['included']:
+            self._state['included'] = True
+    def _check_dependencies(self):
+        for dep in self._dependencies:
+            try: exec(f'import {dep}')
+            except ImportError:
+                PluginError(f'Dependencies error: {dep} is not installed.')
+    def _check(self):
+        if not self._state['included']: raise PluginError("Use include method before using operations. \nUse 'plugin.include()'' (example) for include lib.")
     def __call__(self, *args, **kwds):
         return self.frame
 
@@ -68,15 +73,15 @@ class MathPlugin(PluginBase):
     dependencies = ['math', 'cmath']
     def __init__(self, frame = None):
         super().__init__(frame)
-        self._check_dependencies(self.dependencies)
+        self._dependencies = ['math', 'cmath']
         self._state = {'included': False, 'safemode': self.frame._get_safemode()}
         self._version = 'v0.1.1'
         self._counter = 0
     
     def include(self):
         if not self._state['included']:
+            super().include()
             self.frame.Code(f'import math, cmath \n_math_plugin_ver = {repr(self._version)}')
-            self._state['included'] = True
         return self
     
     def parabola(self, x: int | float, 
@@ -120,7 +125,7 @@ __temp_x2_math{cache} = (-__temp_b_math{cache} - __temp_sqrt_D_math{cache}) / (2
         return self
 
     def _check(self):
-        if not self._state['included']: raise PluginError("Use include method before using operations. \nUse 'plugin.include()'' (example) for include lib.")
+        super()._check()
         if self._state['safemode']: raise PluginError('Your frame in safemode. \nMath operations works only without safemode: code execution must be available.')
     
     def _cache(self): self._counter += 1; return self._counter
