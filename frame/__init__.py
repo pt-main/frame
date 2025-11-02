@@ -130,7 +130,7 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 def open_and_run(filename: str = 'ctx.json', 
                  format: str = 'json', 
                  name_of_result_var: str = 'res',
-                 returning_format: str = 'result', exec_method = 'basic'):
+                 returning_format: str = 'result', exec_method = 'basic') -> any | Frame:
     '{returning_format} - result/frame \n\n{exec_method} - basic/safe'
     if returning_format == 'result':
         with Frame().load(filename, format) as f: 
@@ -138,5 +138,14 @@ def open_and_run(filename: str = 'ctx.json',
             res = exec_and_return(code, name_of_result_var) if exec_method == 'basic' else exec_and_return_safe(code, name_of_result_var)
     else: res = Frame().load(filename, format)
     return res
+
+def save_code_to_bin(filename: str = 'ctx.json', 
+                     output_file: str = 'bin.py',
+                     format: str = 'json'):
+    opened = open_and_run(filename, format, returning_format='frame')
+    code = opened.compile()
+    with open(output_file, 'w') as file: file.write(code)
+    return code
+
 
 from .plugins_system import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
