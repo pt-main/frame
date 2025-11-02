@@ -1,3 +1,10 @@
+import builtins
+import sys
+import resource
+from collections.abc import Mapping
+
+
+
 def str_to_int(string: str, summing: bool = True) -> list | int:
     '''
 # String to integrear method
@@ -46,7 +53,7 @@ x = 10
 y = 34
 res = x + y
 """
-print('result:', exec_and_return(simple_code, 'res'))
+print('result:', exec_and_return_safe(simple_code, 'res'))
 ```
 
 ### Security Features:
@@ -56,10 +63,6 @@ print('result:', exec_and_return(simple_code, 'res'))
 4. Restricted loop iterations
 5. No access to dangerous modules
     '''
-    import builtins
-    import sys
-    import resource
-    from collections.abc import Mapping
 
     # Safe builtins whitelist
     SAFE_BUILTINS = {
@@ -178,5 +181,14 @@ class FrameApiError(Exception):
     def __init__(self, *args):
         super().__init__(*args)
 class FramingError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+class PluginIsNotWorkingError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+class PluginError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+class FrameExecutionError(Exception):
     def __init__(self, *args):
         super().__init__(*args)
