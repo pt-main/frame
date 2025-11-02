@@ -16,16 +16,47 @@ class PluginBase(ABC):
         self.frame = frame
         self._has_frame = isinstance(frame, Frame)
         super().__init__()
+    def _check_dependencies(self, deps: list = []):
+        for dep in deps:
+            try: exec(f'import {dep}')
+            except ImportError:
+                PluginError(f'Dependencies error: {dep} is not installed.')
     def work(self):
         '''Main plugin method.'''
         raise PluginIsNotWorkingError
     def include(self):
         '''Include plugin to [Frame] method.'''
+        self._check_dependencies()
         raise PluginIsNotWorkingError
     def __call__(self, *args, **kwds):
         return self.frame
 
 
+
+class PluginRegistry:
+    _plugins = {}
+    
+    @classmethod
+    def register(cls, name, plugin_class):
+        cls._plugins[name] = plugin_class
+    
+    @classmethod
+    def get_plugin(cls, name, frame):
+        return cls._plugins[name](frame)
+    
+    @classmethod
+    def list_plugin(cls):
+        return cls._plugins
+
+def register_plugin(name):
+    def decorator(cls):
+        PluginRegistry.register(name, cls)
+        return cls
+    return decorator
+
+
+
+@register_plugin('math')
 class MathPlugin(PluginBase):
     '''
     # Math Plugin
@@ -34,8 +65,10 @@ class MathPlugin(PluginBase):
     You have to run `include` method before using Plugin.
     
     Argument {framer}: Framer | None - frame context to using lib (only without safemode)'''
+    dependencies = ['math', 'cmath']
     def __init__(self, frame = None):
         super().__init__(frame)
+        self._check_dependencies(self.dependencies)
         self._state = {'included': False, 'safemode': self.frame._get_safemode()}
         self._version = 'v0.1.1'
         self._counter = 0
