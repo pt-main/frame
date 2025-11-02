@@ -247,7 +247,9 @@ You can use with to create context, and call [Frame] object like `ctx()` to get 
 ### Args of initialization:
 - {framer}: str | Framer = 'new' - framer context object for frame.
 - {safemode}: bool - if safemode true, Exec method will be is not available.
-- name: str - framer name in [System.framers]
+- {name}: str - framer name in [System.framers]
+- {save_while_exit}: bool - if true, while will be called [__exit__], context will be automaticly saved.
+- {save_args}: list - list of args [name, format] for method save.
 
 ### Example usage:
 Code:
@@ -268,7 +270,10 @@ result: 500
     def __init__(self, 
                  framer: str | Framer = 'new', 
                  safemode: bool = True, 
-                 name: str = 'f1'):
+                 name: str = 'f1',
+                 save_while_exit: bool = False,
+                 save_args: list = ['ctx', 'pickle']):
+        self.__saving = [save_while_exit, save_args]
         self.framer = Framer() if framer == 'new' else framer
         self.__safemode = safemode
         System.framers[name] = self.framer
@@ -315,6 +320,7 @@ result: 500
                 '_vars': self.framer._vars,
                 '_aliases': self.framer._aliases
             },
+            'saving': self.__saving,
             'safemode': self.__safemode
         }
         try:
@@ -327,7 +333,8 @@ result: 500
                         '_vars': {k: str(v) for k, v in data['framer']['_vars'].items()},  # Приводим к строке для JSON
                         '_aliases': data['framer']['_aliases']
                     },
-                    'safemode': data['safemode']
+                    'safemode': data['safemode'],
+                    'saving': data['saving']
                 }
                 with open(filename, 'w', encoding='utf-8') as f: 
                     json.dump(json_data, f, indent=2, ensure_ascii=False)
@@ -357,13 +364,15 @@ result: 500
             self.framer._vars = data['framer']['_vars'] 
             self.framer._aliases = data['framer']['_aliases']
             self.__safemode = data['safemode']
+            self.__safemode = data['saving']
             return self
         except Exception as e:
             raise FrameError(f"Load failed: {e}")
     def __enter__(self): 
         self.framer.__enter__()
         return self
-    def __exit__(self, *args, **kwargs): pass
+    def __exit__(self, *args, **kwargs): 
+        if self.__saving[0]: self.save(*self.__saving[1])
     def __call__(self, *args, **kwds):
         return self.framer
 
@@ -394,13 +403,12 @@ if __name__ == '__main__':
         Var('test', Get('x') * Get('y')) 
         Var('res', 'test + result', with_eval=True)
     print(exec_and_return(f.compile(), 'res')) # 560
-    with Frame(safemode=False) as f:
+    with Frame(save_while_exit=True) as f:
         f.Var('x', 10)
         f.Var('y', 50)
         System.match('x > y', 'print("x bigger")', 'print("y bigger")')
         f.Var('test', Get('x') * Get('y')) 
-        f.save('ctx')
-    with Frame(safemode=False).load('ctx') as f:
+    with Frame().load('ctx', 'pickle') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
     '''
