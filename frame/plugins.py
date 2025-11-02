@@ -19,6 +19,9 @@ class PluginBase(ABC):
     def work(self):
         '''Main plugin method.'''
         raise PluginIsNotWorkingError
+    def include(self):
+        '''Include plugin to [Frame] method.'''
+        raise PluginIsNotWorkingError
     def __call__(self, *args, **kwds):
         return self.frame
 
@@ -65,6 +68,7 @@ class MathPlugin(PluginBase):
                      name_of_result_variable: str = 'res', 
                      returning: str = 'frame') -> 'Frame.Code' | MathPlugin:
         '{returning} - frame / Code. \n\nValue of {name_of_result_variable} in code will be list[x1, x2, discriminant].'
+        self._check()
         cache = self._cache()
         self.frame.Var(f'__temp_a_math{cache}', a)
         self.frame.Var(f'__temp_b_math{cache}', b)
