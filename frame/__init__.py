@@ -5,7 +5,7 @@ The Frame - multitool module for programming.
 
 ### Functions: 
     #### Framer functions -
-        Frame (keyclass), Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
+        Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
         framing_result
     #### Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
@@ -24,11 +24,11 @@ If you want to protect your porgram (full off exec), you can use {safemode} in F
 Not for web development.
 '''
 
-from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
+from .frames import (Framer, Frame, FramesComposer, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, Return as fReturn, Code as fCode)
 from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
-from .exceptions import *
-
+from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
+                        PluginError, PluginIsNotWorkingError)
 
 
 def framing(
@@ -148,4 +148,5 @@ def save_code_to_bin(filename: str = 'ctx.json',
     return code
 
 
-from .plugins_system import (PluginBase, MathPlugin, PluginRegistry, register_plugin)
+from .plugins_system import (PluginBase, PluginRegistry, register_plugin)
+from .plugins import (MathPlugin)
