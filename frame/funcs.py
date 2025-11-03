@@ -148,7 +148,10 @@ print('result:', exec_and_return_safe(simple_code, 'res'))
         return None
 
 def exec_and_return(code: str, 
-                    variable_name: str):
+                    variable_name: str, 
+                    local: dict[str, any] = {},
+                    globals: dict[str, any] = globals(),
+                    mode: str = 'var'):
     '''
 # Exec and return
 Execute code and return result of {variable name}.
@@ -156,6 +159,8 @@ Execute code and return result of {variable name}.
 
 - {code}: str - full code.
 - {variable_name}: str - name of vatiable to return.
+- {local}: dict - dictionary to executing.
+- {mode}: str - var/res - function will be returning result of execution if res, else value from {variable_name}.
 
 ### Uasge:
 Code:
@@ -172,10 +177,11 @@ Output:
 result: 34
 ```
     '''
-    local_namespace = {}
     try:
-        exec(code, globals(), local_namespace)
-        return local_namespace.get(variable_name)
+        non_locals = local
+        compiled = compile(code, '__tmp', 'exec')
+        res = exec(compiled, globals, non_locals)
+        return res if mode == 'res' else non_locals.get(variable_name)
     except Exception as e:
         print(f"Error in code running: {e}")
         return None
