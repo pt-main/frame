@@ -4,7 +4,7 @@ import pickle
 import json
 from typing import Dict, Any
 from .exceptions import *
-from .funcs import exec_and_return
+from .funcs import exec_and_return, str_to_int
 import ast
 
 
@@ -22,9 +22,11 @@ class _CodeGenerator:
         self._cache += 1
         return var_name
     def _gen_id(self, k: int = 0):
-        id = f'_idvalue_{self._cache * k}{k}'
+        id = f'_id{len(self._code)+self._cache+k}{self._cache * (k+1)}{k}'
         self._cache += 1
         return id
+    def _comentary(self, *args):
+        self._new_line(f'"""{"\n".join(args)}"""')
 
 
 class Framer(_CodeGenerator):
@@ -97,6 +99,8 @@ For system.'''
             cls._global = cls()
         return cls._global
 
+System = SystemClass().get_global()
+
 class SystemOP:
     '''
     # System operations
@@ -107,6 +111,7 @@ class SystemOP:
               false_block: str = None, 
               framer: Framer | None = None):
         framer = System.framer if framer == None else framer
+        framer._comentary('condition block', condition)
         cache = framer._gen_id(len(framer._aliases) + len(framer._code))
         Var(f'__condition_temp{cache}', condition, with_eval=True, framer=framer)
         framer._new_code_line(f'if __condition_temp{cache}:')
@@ -124,9 +129,6 @@ class SystemOP:
         s = System.framer
         System.framer = System.last_framer
         System.last_framer = s
-
-
-System = SystemClass().get_global()
 
 
 class Var:
@@ -319,6 +321,7 @@ result: 500
         return Return(name, self.framer)
     def Code(self, code: str) -> Code:
         '''Append code to frame.'''
+        self.framer._comentary('code section', f'Framer: {self._name}')
         return Code(code, self.framer)
     def Exec(self) -> Any:
         '''Executing code of frame.'''
@@ -412,6 +415,91 @@ result: 500
         return self.framer
 
 
+class FramesComposer:
+    def __init__(self, safemode: bool = False, arch: str = 'dict', superglobal_name: str = 'sgc'):
+        'arch - dict/array (array is experemental)'
+        framer = 'new' 
+        self.__safemode = safemode
+        save_while_exit = False
+        save_args = ['ctx', 'pickle']
+        self._superglobal_name = superglobal_name
+        self.sgc = Frame(framer, self.__safemode, superglobal_name, save_while_exit, save_args) # superglobal context
+        self._frames: list[Frame] | dict[str, Frame] = {} if arch == 'dict' else []
+        self._arch = arch
+    def load_frame(self, index: str | int, frame: Frame, add_superglobal: bool = True):
+        if add_superglobal: frame.Var(self._superglobal_name, self.sgc)
+
+        if self._arch == 'dict': self._frames[index] = frame
+        else: 
+            pre = self._frames[:index-1]
+            after = self._frames[index:]
+            _frames = pre + [frame] + after
+            self._frames = _frames
+    def get_frame(self, index: str | int):
+        try: return self._frames[int(index) if self._arch == 'array' else index]
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
+    def superglobal(self): return self.sgc
+    def __enter__(self): return self
+    def __exit__(self, *args, **kwargs): pass
+    def __call__(self, *args, **kwds): return self.superglobal()
+    def __add__(self, other: Frame): 
+        if isinstance(other, Frame): self.load_frame(len(self._frames) if self._arch == 'array' else other._name, other)
+        else: raise FrameComposeError('', 'NotSuuportableObject', f"Inncorect attemp to add {type(other)} object to frames.")
+    def __getitem__(self, index):
+        try: return self._frames[index]
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
+        except Exception as e: raise FrameComposeError(index, 'GetItemError', e)
+    def __setitem__(self, index, value):
+        try: self.load_frame(index, value)
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
+        except Exception as e: raise FrameComposeError(index, 'SetItemError', e)
+    def __eq__(self, value):
+        if isinstance(value, FramesComposer): 
+            cond1 = value.__safemode == self.__safemode and value._arch == self._arch
+            cond2 = value.scg._name == self.scg._name  and value._superglobal_name == self._superglobal_name
+            return cond1 and cond2
+        else: return False
+    def __format__(self, format_spec: str):
+        if format_spec == '.all': return str(self._frames)
+        elif format_spec.startswith('.get>'):
+            index = format_spec[5:]
+            list = {}
+            counter = 0
+            for i in self._frames: 
+                list[str(counter)] = self._frames[i]
+                counter += 1
+            try: return str(list[str(index)])
+            except (KeyError) as e: 
+                raise FrameComposeError(f'index<{index}>', 'GetItemError', f'Unknown key: {e}')
+            except Exception as e: raise FrameComposeError(index, 'fStringError', e)
+        elif format_spec.startswith('.getname>'):
+            index = format_spec[9:]
+            list = {}
+            counter = 0
+            for i in self._frames: 
+                list[str(counter)] = i
+                counter += 1
+            try: return list[str(index)]
+            except (KeyError) as e: 
+                raise FrameComposeError(f'index<{index}>', 'GetItemError', f'Unknown key: {e}')
+            except Exception as e: raise FrameComposeError(index, 'fStringError', e)
+        elif format_spec.startswith('.safemode'):
+            return str(self.__safemode)
+        elif format_spec.startswith('.hash'):
+            return str(self.__hash__())
+        elif format_spec.startswith(('.sgc', '.superglobal', '.sgcname')): 
+            return self.sgc._name
+        raise ValueError('Unknown format option.')
+    def __hash__(self):
+        arch = str_to_int(self._arch)
+        frames = str_to_int(self._frames)
+        safemode = str_to_int(self.__safemode)
+        superglobal = str_to_int(self._superglobal_name)
+        return arch+frames+safemode+superglobal
+
+
+
+
 
 Var('name', 'frame', framer=System.framers['basic'])
 
@@ -438,7 +526,6 @@ if __name__ == '__main__':
         Var('test', Get('x') * Get('y')) 
         Var('res', 'test + result', with_eval=True)
     print(exec_and_return(f.compile(), 'res')) # 560
-
     with Frame(save_while_exit=True, save_args=['ctx.json', 'json']) as f:
         f.Var('x', 10)
         f.Var('y', 50)
@@ -447,12 +534,25 @@ if __name__ == '__main__':
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
+    with FramesComposer() as fc:
+        fc.load_frame('test', Frame(name='test1'))
+        print(fc['test']._name)
+        fc['test'] = Frame()
+        print(fc['test']._name)
+        print(fc['test'].Get('sgc'))
+    print(f'{fc:.get>0}, {fc:.getname>0}, {fc:.sgc}, {fc:.hash}, {fc:.safemode}')
+    print(hash(fc))
     '''
-    y bigger
-    500
-    x + y
-    60
-    560
-    y bigger
-    result: 500
+y bigger
+500
+x + y
+60
+560
+y bigger
+result: 500
+test1
+f1
+<__main__.Frame object at 0x10f3e2f90>
+<__main__.Frame object at 0x10f48d480>, test, sgc, 3636, False
+3636
     '''
