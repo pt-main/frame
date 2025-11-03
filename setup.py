@@ -3,14 +3,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='frame-fwl', # frame-framework-lib
-    version='0.3.6.1',
+    version='0.3.8.1',
     description='The Frame - multitool module for programming with advanced framing capabilities',
     author='pt',
     author_email='kvantorium73.int@gmail.com',
     packages=find_packages(),
     install_requires=[],
     python_requires='>=3.9',
-    
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

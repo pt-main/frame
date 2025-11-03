@@ -1,6 +1,6 @@
 '''
-# Frame
-The Frame - multitool module for programming.
+# Framing Concept Core
+The Frames - multitool programming paradigm.
 
 
 ### Functions: 
