@@ -324,7 +324,7 @@ result: 500
         return Return(name, self.framer)
     def Code(self, code: str, *comentaries) -> Code:
         '''Append code to frame.'''
-        self.framer._comentary('code section', f'Framer: {self._name}', *comentaries)
+        self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
     def Exec(self) -> Any:
         '''Executing code of frame.'''
@@ -569,6 +569,10 @@ if __name__ == '__main__':
         @f.register()
         def test(): 
             print('testing')
+        @f.register()
+        class Test():
+            hello = 'World'
+            pass
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
@@ -580,7 +584,7 @@ if __name__ == '__main__':
         print(fc['test'].Get('sgc'))
     print(f'{fc:.get>0}, {fc:.getname>0}, {fc:.sgc}, {fc:.hash}, {fc:.safemode}')
     print(hash(fc))
-    print('/n/n======= CODE =======')
+    print('\n\n======= CODE =======')
     print(code)
     '''
 y bigger
@@ -589,14 +593,15 @@ x + y
 60
 560
 y bigger
-result: <function test at 0x10db54040>
+result: <function test at 0x10d4a0040>
 test1
 f1
-<__main__.Frame object at 0x10da8e7b0>
-<__main__.Frame object at 0x10daa97b0>, test, sgc, 3734, False
-3734
+<__main__.Frame object at 0x10d3da7b0>
+<__main__.Frame object at 0x10d3f17b0>, test, sgc, 3684, False
+3684
 
 
+======= CODE =======
 """code section
 Framer: f1"""
 
@@ -619,4 +624,11 @@ Framer: f1"""
 # Registred construction: def test
 def test(): 
     print('testing')
-    '''
+"""code section
+Framer: f1"""
+
+# Registred construction: class Test
+class Test():
+    hello = 'World'
+    pass
+'''

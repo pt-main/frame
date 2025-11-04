@@ -264,7 +264,7 @@ def test_superglobal_architecture():
     
     total_time = time.time() - start_time
     print(f"Обработано {requests_handled} запросов за {total_time:.4f} сек")
-    print(f"Среднее время на запрос: {(total_time/requests_handled)*1000:.2f} мс")
+    print(f"Среднее время на запрос: {(total_time/requests_handled)*1000:.4f} мс")
     
     # Показываем финальное состояние
     print(f"Активные подключения: {app_ctx.Get('active_connections')}")

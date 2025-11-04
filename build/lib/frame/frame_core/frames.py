@@ -3,9 +3,9 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
-from .exceptions import *
-from .funcs import exec_and_return, str_to_int
-import ast
+from frame.frame_core.exceptions import *
+from frame.frame_core.funcs import exec_and_return, str_to_int
+import ast, inspect
 
 
 class _CodeGenerator:
@@ -292,10 +292,13 @@ result: 500
                  save_while_exit: bool = False,
                  save_args: list = ['ctx', 'pickle']):
         self.__saving = [save_while_exit, save_args]
-        self.framer = Framer() if framer == 'new' else framer
+        self.framer: Framer = Framer() if framer == 'new' else framer
         self.__safemode = safemode
         self._name = name
         System.framers[name] = self.framer
+        std = '''
+'''
+        self.Code(std)
     def Sys(self) -> SystemOP: 
         '''Return [System] class.'''
         return SystemOP
@@ -319,9 +322,9 @@ result: 500
     def Return(self, name: Var) -> Return: 
         '''Set of variable to return.'''
         return Return(name, self.framer)
-    def Code(self, code: str) -> Code:
+    def Code(self, code: str, *comentaries) -> Code:
         '''Append code to frame.'''
-        self.framer._comentary('code section', f'Framer: {self._name}')
+        self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
     def Exec(self) -> Any:
         '''Executing code of frame.'''
@@ -334,6 +337,38 @@ result: 500
         '''Recreate framer.'''
         self.framer = Framer()
         return self
+    def register(self, name: str = None):
+        def decorator(func):
+            func_name = name or func.__name__
+            try:
+                source_code = inspect.getsource(func)
+                lines = source_code.split('\n')[1:]
+                tabbed = False
+                can_edit_tabs = True
+                tabs = 0
+                cleaned_code = []
+                for i in lines:
+                    if i.startswith('   '): 
+                        t = 0
+                        for local_i in i: 
+                            if local_i == ' ':
+                                t += 1
+                            if t % 4 == 0: 
+                                if can_edit_tabs: tabs = t/4
+                            tabbed = True
+                        can_edit_tabs = False
+                    if not i.startswith('   '): tabbed = False
+                    if tabbed: 
+                        tabs_c = int(4 * tabs)
+                        cleaned_code.append(i[tabs_c:])
+                cleaned_code = '\n'.join(cleaned_code)
+                type = cleaned_code.split(" ")[0]
+                self.Code(f"\n# Registred construction: {type} {func_name}\n{cleaned_code}")
+            except Exception as e:
+                print(f"Warning: Could not register source code for {func_name}: \n{e}")
+                self.Var(func_name, func, to_repr=False)
+            return func
+        return decorator
     def save(self, filename: str, format: str = 'pickle') -> Frame:
         '''
         ## Saving frame to file.
@@ -456,7 +491,7 @@ class FramesComposer:
     def __eq__(self, value):
         if isinstance(value, FramesComposer): 
             cond1 = value.__safemode == self.__safemode and value._arch == self._arch
-            cond2 = value.scg._name == self.scg._name  and value._superglobal_name == self._superglobal_name
+            cond2 = value.sgc._name == self.sgc._name  and value._superglobal_name == self._superglobal_name
             return cond1 and cond2
         else: return False
     def __format__(self, format_spec: str):
@@ -531,6 +566,13 @@ if __name__ == '__main__':
         f.Var('y', 50)
         SystemOP.match('x > y', 'print("x bigger")', 'print("y bigger")')
         f.Var('test', Get('x') * Get('y')) 
+        @f.register()
+        def test(): 
+            print('testing')
+        @f.register()
+        class Test():
+            hello = 'World'
+            pass
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
@@ -542,6 +584,8 @@ if __name__ == '__main__':
         print(fc['test'].Get('sgc'))
     print(f'{fc:.get>0}, {fc:.getname>0}, {fc:.sgc}, {fc:.hash}, {fc:.safemode}')
     print(hash(fc))
+    print('\n\n======= CODE =======')
+    print(code)
     '''
 y bigger
 500
@@ -549,10 +593,42 @@ x + y
 60
 560
 y bigger
-result: 500
+result: <function test at 0x10d4a0040>
 test1
 f1
-<__main__.Frame object at 0x10f3e2f90>
-<__main__.Frame object at 0x10f48d480>, test, sgc, 3636, False
-3636
-    '''
+<__main__.Frame object at 0x10d3da7b0>
+<__main__.Frame object at 0x10d3f17b0>, test, sgc, 3684, False
+3684
+
+
+======= CODE =======
+"""code section
+Framer: f1"""
+
+
+x: int = 10
+y: int = 50
+"""condition block
+x > y"""
+__condition_temp_id19567: int = eval('x > y')
+if __condition_temp_id19567:
+    
+    print("x bigger")
+else:
+    
+    print("y bigger")
+test: int = 500
+"""code section
+Framer: f1"""
+
+# Registred construction: def test
+def test(): 
+    print('testing')
+"""code section
+Framer: f1"""
+
+# Registred construction: class Test
+class Test():
+    hello = 'World'
+    pass
+'''
