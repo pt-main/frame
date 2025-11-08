@@ -90,3 +90,8 @@ Latest version will installed with framework to frame.frame_core.
 This concept is in its early stages. It will include modules for cryptography, internet security, and white/gray hacking tools for educational purposes.
 
 Currently, the concept is in development. Latest version will installed with framework to frame.nets_core.
+
+## 🔗 Links
+- [Our Team](https://github.com/Intelektika-team/)
+- [Main developer](https://github.com/pt-main)
+- [💬 Discussions](https://github.com/your-repo/discussions)
