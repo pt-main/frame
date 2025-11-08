@@ -3,6 +3,14 @@
 The Frames - multitool programming paradigm.
 
 
+### Modules:
+    - exceptions - exceptions of frames.
+    - frames - main file of lib.
+    - funcs - other functions file.
+    - plugin_system - plugin base.
+    - plugins - official plugins.
+
+
 ### Functions: 
     #### Framer functions -
         Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
@@ -15,7 +23,12 @@ The Frames - multitool programming paradigm.
         FrameApiError, FramerError, FramingError, FrameExecutionError, PluginError, 
         PluginIsNotWorkingError
 
-        
+### Main terms - 
+    - Frame - An isolated execution space with its own variables and code. Can interact with other contexts.
+    - Framing - creating a local environment with superglobal variables.
+    - Superglobal is the state of an object when it does not depend on the context. Roughly speaking, a global frame.
+    - Framefile is a binary frame image that can be saved and loaded.
+
 ### Warning: 
 Main clases of frame (like [Framer], for example) using eval/compile/exec. 
 
@@ -30,6 +43,7 @@ from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
 
+__core_version__ = '0.4.12'
 
 def framing(
     framer: str | Framer = 'new',

@@ -3,8 +3,8 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
-from frame.frame_core.exceptions import *
-from frame.frame_core.funcs import exec_and_return, str_to_int
+from .exceptions import *
+from .funcs import exec_and_return, str_to_int
 import ast, inspect
 
 
@@ -296,9 +296,6 @@ result: 500
         self.__safemode = safemode
         self._name = name
         System.framers[name] = self.framer
-        std = '''
-'''
-        self.Code(std)
     def Sys(self) -> SystemOP: 
         '''Return [System] class.'''
         return SystemOP
@@ -322,9 +319,10 @@ result: 500
     def Return(self, name: Var) -> Return: 
         '''Set of variable to return.'''
         return Return(name, self.framer)
-    def Code(self, code: str, *comentaries) -> Code:
+    def Code(self, code: str, comentary: bool = True, *comentaries) -> Code:
         '''Append code to frame.'''
-        self.framer._comentary('code section', f'Framer: {self._name}', *comentaries)
+        if comentary:
+            self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
     def Exec(self) -> Any:
         '''Executing code of frame.'''
@@ -357,13 +355,15 @@ result: 500
                                 if can_edit_tabs: tabs = t/4
                             tabbed = True
                         can_edit_tabs = False
-                    if not i.startswith('   '): tabbed = False
+                    if not i.startswith('   '): tabbed = False; can_edit_tabs = False
                     if tabbed: 
                         tabs_c = int(4 * tabs)
                         cleaned_code.append(i[tabs_c:])
+                    else: 
+                        cleaned_code.append(i)
                 cleaned_code = '\n'.join(cleaned_code)
                 type = cleaned_code.split(" ")[0]
-                self.Code(f"\n# Registred construction: {type} {func_name}\n{cleaned_code}")
+                self.Code(f"\n# Registred construction: {type} {func_name}\n{cleaned_code}", True, f'Registring [{type} {func_name}] construcntion.')
             except Exception as e:
                 print(f"Warning: Could not register source code for {func_name}: \n{e}")
                 self.Var(func_name, func, to_repr=False)
@@ -451,6 +451,9 @@ result: 500
 
 
 class FramesComposer:
+    '''
+# FramesComposer
+    '''
     def __init__(self, safemode: bool = False, arch: str = 'dict', superglobal_name: str = 'sgc'):
         'arch - dict/array (array is experemental)'
         framer = 'new' 
@@ -461,26 +464,43 @@ class FramesComposer:
         self.sgc = Frame(framer, self.__safemode, superglobal_name, save_while_exit, save_args) # superglobal context
         self._frames: list[Frame] | dict[str, Frame] = {} if arch == 'dict' else []
         self._arch = arch
-    def load_frame(self, index: str | int, frame: Frame, add_superglobal: bool = True):
-        if add_superglobal: frame.Var(self._superglobal_name, self.sgc)
-
+    def load_frame(self, index: str | int, frame: Frame) -> FramesComposer:
         if self._arch == 'dict': self._frames[index] = frame
         else: 
             pre = self._frames[:index-1]
             after = self._frames[index:]
             _frames = pre + [frame] + after
             self._frames = _frames
-    def get_frame(self, index: str | int):
+        return self
+    def get_frame(self, index: str | int) -> Frame:
         try: return self._frames[int(index) if self._arch == 'array' else index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
-    def superglobal(self): return self.sgc
-    def __enter__(self): return self
+    def sync(self, name_1: str, name_2: str) -> FramesComposer:
+        f1 = self._frames[name_1]
+        f2 = self._frames[name_2]
+        new_dict1 = {}
+        for i in f1.framer._aliases: 
+            new_dict1[i] = f1.framer._aliases[i]
+        for i in f2.framer._aliases: 
+            new_dict1[i] = f2.framer._aliases[i]
+        f1.framer._aliases = new_dict1
+        f2.framer._aliases = new_dict1
+        new_dict2 = {}
+        for i in f1.framer._vars: 
+            new_dict2[i] = f1.framer._vars[i]
+        for i in f2.framer._vars: 
+            new_dict2[i] = f2.framer._vars[i]
+        f1.framer._vars = new_dict2
+        f2.framer._vars = new_dict2
+        return self
+    def superglobal(self) -> Framer: return self.sgc
+    def __enter__(self) -> FramesComposer: return self
     def __exit__(self, *args, **kwargs): pass
-    def __call__(self, *args, **kwds): return self.superglobal()
-    def __add__(self, other: Frame): 
+    def __call__(self, *args, **kwds) -> Frame: return self.superglobal()
+    def __add__(self, other: Frame) -> None: 
         if isinstance(other, Frame): self.load_frame(len(self._frames) if self._arch == 'array' else other._name, other)
         else: raise FrameComposeError('', 'NotSuuportableObject', f"Inncorect attemp to add {type(other)} object to frames.")
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Frame:
         try: return self._frames[index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
         except Exception as e: raise FrameComposeError(index, 'GetItemError', e)
@@ -488,13 +508,13 @@ class FramesComposer:
         try: self.load_frame(index, value)
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
         except Exception as e: raise FrameComposeError(index, 'SetItemError', e)
-    def __eq__(self, value):
+    def __eq__(self, value) -> bool:
         if isinstance(value, FramesComposer): 
             cond1 = value.__safemode == self.__safemode and value._arch == self._arch
             cond2 = value.sgc._name == self.sgc._name  and value._superglobal_name == self._superglobal_name
             return cond1 and cond2
         else: return False
-    def __format__(self, format_spec: str):
+    def __format__(self, format_spec: str) -> str:
         if format_spec == '.all': return str(self._frames)
         elif format_spec.startswith('.get>'):
             index = format_spec[5:]
@@ -525,12 +545,14 @@ class FramesComposer:
         elif format_spec.startswith(('.sgc', '.superglobal', '.sgcname')): 
             return self.sgc._name
         raise ValueError('Unknown format option.')
-    def __hash__(self):
+    def __hash__(self) -> int:
         arch = str_to_int(self._arch)
         frames = str_to_int(self._frames)
         safemode = str_to_int(self.__safemode)
         superglobal = str_to_int(self._superglobal_name)
         return arch+frames+safemode+superglobal
+    def __int__(self):
+        return self.__hash__()
 
 
 
@@ -569,6 +591,10 @@ if __name__ == '__main__':
         @f.register()
         def test(): 
             print('testing')
+        @f.register()
+        class Test():
+            hello = 'World'
+            pass
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
@@ -576,11 +602,12 @@ if __name__ == '__main__':
         fc.load_frame('test', Frame(name='test1'))
         print(fc['test']._name)
         fc['test'] = Frame()
+        fc['test1'] = Frame()
         print(fc['test']._name)
-        print(fc['test'].Get('sgc'))
+        fc.sync('test', 'test1')
     print(f'{fc:.get>0}, {fc:.getname>0}, {fc:.sgc}, {fc:.hash}, {fc:.safemode}')
     print(hash(fc))
-    print('/n/n======= CODE =======')
+    print('\n\n======= CODE =======')
     print(code)
     '''
 y bigger
@@ -589,14 +616,15 @@ x + y
 60
 560
 y bigger
-result: <function test at 0x10db54040>
+result: <function test at 0x10d4a0040>
 test1
 f1
-<__main__.Frame object at 0x10da8e7b0>
-<__main__.Frame object at 0x10daa97b0>, test, sgc, 3734, False
-3734
+<__main__.Frame object at 0x10d3da7b0>
+<__main__.Frame object at 0x10d3f17b0>, test, sgc, 3684, False
+3684
 
 
+======= CODE =======
 """code section
 Framer: f1"""
 
@@ -619,4 +647,11 @@ Framer: f1"""
 # Registred construction: def test
 def test(): 
     print('testing')
-    '''
+"""code section
+Framer: f1"""
+
+# Registred construction: class Test
+class Test():
+    hello = 'World'
+    pass
+'''
