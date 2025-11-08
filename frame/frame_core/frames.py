@@ -3,8 +3,8 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
-from frame.frame_core.exceptions import *
-from frame.frame_core.funcs import exec_and_return, str_to_int
+from .exceptions import *
+from .funcs import exec_and_return, str_to_int
 import ast, inspect
 
 
@@ -451,6 +451,9 @@ result: 500
 
 
 class FramesComposer:
+    '''
+# FramesComposer
+    '''
     def __init__(self, safemode: bool = False, arch: str = 'dict', superglobal_name: str = 'sgc'):
         'arch - dict/array (array is experemental)'
         framer = 'new' 
@@ -461,7 +464,7 @@ class FramesComposer:
         self.sgc = Frame(framer, self.__safemode, superglobal_name, save_while_exit, save_args) # superglobal context
         self._frames: list[Frame] | dict[str, Frame] = {} if arch == 'dict' else []
         self._arch = arch
-    def load_frame(self, index: str | int, frame: Frame):
+    def load_frame(self, index: str | int, frame: Frame) -> FramesComposer:
         if self._arch == 'dict': self._frames[index] = frame
         else: 
             pre = self._frames[:index-1]
@@ -469,10 +472,10 @@ class FramesComposer:
             _frames = pre + [frame] + after
             self._frames = _frames
         return self
-    def get_frame(self, index: str | int):
+    def get_frame(self, index: str | int) -> Frame:
         try: return self._frames[int(index) if self._arch == 'array' else index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
-    def sync(self, name_1: str, name_2: str):
+    def sync(self, name_1: str, name_2: str) -> FramesComposer:
         f1 = self._frames[name_1]
         f2 = self._frames[name_2]
         new_dict1 = {}
@@ -490,14 +493,14 @@ class FramesComposer:
         f1.framer._vars = new_dict2
         f2.framer._vars = new_dict2
         return self
-    def superglobal(self): return self.sgc
-    def __enter__(self): return self
+    def superglobal(self) -> Framer: return self.sgc
+    def __enter__(self) -> FramesComposer: return self
     def __exit__(self, *args, **kwargs): pass
-    def __call__(self, *args, **kwds): return self.superglobal()
-    def __add__(self, other: Frame): 
+    def __call__(self, *args, **kwds) -> Frame: return self.superglobal()
+    def __add__(self, other: Frame) -> None: 
         if isinstance(other, Frame): self.load_frame(len(self._frames) if self._arch == 'array' else other._name, other)
         else: raise FrameComposeError('', 'NotSuuportableObject', f"Inncorect attemp to add {type(other)} object to frames.")
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Frame:
         try: return self._frames[index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
         except Exception as e: raise FrameComposeError(index, 'GetItemError', e)
@@ -505,13 +508,13 @@ class FramesComposer:
         try: self.load_frame(index, value)
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
         except Exception as e: raise FrameComposeError(index, 'SetItemError', e)
-    def __eq__(self, value):
+    def __eq__(self, value) -> bool:
         if isinstance(value, FramesComposer): 
             cond1 = value.__safemode == self.__safemode and value._arch == self._arch
             cond2 = value.sgc._name == self.sgc._name  and value._superglobal_name == self._superglobal_name
             return cond1 and cond2
         else: return False
-    def __format__(self, format_spec: str):
+    def __format__(self, format_spec: str) -> str:
         if format_spec == '.all': return str(self._frames)
         elif format_spec.startswith('.get>'):
             index = format_spec[5:]
@@ -542,12 +545,14 @@ class FramesComposer:
         elif format_spec.startswith(('.sgc', '.superglobal', '.sgcname')): 
             return self.sgc._name
         raise ValueError('Unknown format option.')
-    def __hash__(self):
+    def __hash__(self) -> int:
         arch = str_to_int(self._arch)
         frames = str_to_int(self._frames)
         safemode = str_to_int(self.__safemode)
         superglobal = str_to_int(self._superglobal_name)
         return arch+frames+safemode+superglobal
+    def __int__(self):
+        return self.__hash__()
 
 
 

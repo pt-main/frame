@@ -20,6 +20,8 @@ class PluginBase(ABC):
         '''Include plugin to [Frame] method.'''
         self._check_dependencies()
         if not self._state['included']:
+            self.frame: Frame = Frame() if not self._has_frame else self.frame
+            self.frame.Code(f'import ({", ".join(self._dependencies)})')
             self._state['included'] = True
     def _check_dependencies(self):
         for dep in self._dependencies:

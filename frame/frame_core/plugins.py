@@ -29,7 +29,7 @@ def sum(n):
     except: return n
 '''
             self.frame.Code(std)
-            self.frame.Code(f'import math, cmath \n_math_plugin_ver = {repr(self._version)}')
+            self.frame.Code(f'\n_math_plugin_ver = {repr(self._version)}')
         return self
     
     def parabola(self, x: int | float, 
