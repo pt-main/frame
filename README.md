@@ -62,7 +62,7 @@ def not_for_import():...
 Now, the main file simply imports the context:  
 ```python  
 from config import sgc  
-print(test_input)  
+print(sgc.Get('test_input'))  
 ```  
 This is much simpler and cleaner!  
 
