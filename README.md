@@ -15,24 +15,6 @@ pip3 install frame-fwl
 Import like `frame`.
 
 
-## ✨ Key Features
-
-### 🎭 Multiple Contexts
-- Isolated execution environments  
-- Inter-context communication
-- Superglobal variables system
-
-### 🔧 Developer Experience  
-- High-level API with Frame class
-- Low-level control with Framer
-- Plugin system for extensions
-
-### 💾 Serialization & Storage
-- Save/Load frames to JSON/Pickle
-- Binary framefile format
-- Cross-session state persistence
-
-
 ## 🚀 Detailed Concept Descriptions  
 ### 🖼 Frames  
 This concept aims to simplify code transfer, serialization, and configuration.  
@@ -85,6 +67,23 @@ print(test_input)
 This is much simpler and cleaner!  
 
 Latest version will installed with framework to frame.frame_core.
+
+## ✨ Key Features
+
+### 🎭 Multiple Contexts
+- Isolated execution environments  
+- Inter-context communication
+- Superglobal variables system
+
+### 🔧 Developer Experience  
+- High-level API with Frame class
+- Low-level control with Framer
+- Plugin system for extensions
+
+### 💾 Serialization & Storage
+- Save/Load frames to JSON/Pickle
+- Binary framefile format
+- Cross-session state persistence
 
 ### 🌐 Nets  
 This concept is in its early stages. It will include modules for cryptography, internet security, and white/gray hacking tools for educational purposes.
