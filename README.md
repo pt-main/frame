@@ -8,6 +8,12 @@ Frame is a multifunctional framework that combines concepts implemented as separ
 | Frames | Creating isolated contexts for code execution and configuration. | Frame, Framing, Framefile, Superglobal | 0.4.12 |  
 | Nets | Cryptography, white/gray hacking, and internet security. | None yet | 0.1.1 |  
 
+### Quick Start -
+```bash 
+pip3 install frame-fwl
+```
+Import like `frame`.
+
 ## 🚀 Detailed Concept Descriptions  
 ### 🖼 Frames  
 This concept aims to simplify code transfer, serialization, and configuration.  
