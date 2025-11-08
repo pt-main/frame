@@ -7,11 +7,16 @@ frame/frame_core/frames.py
 frame/frame_core/funcs.py
 frame/frame_core/plugins.py
 frame/frame_core/plugins_system.py
+frame/nets_core/__init__.py
+frame/nets_core/hack/__init__.py
+frame/nets_core/hack/gray.py
+frame/nets_core/hack/white.py
 frame_fwl.egg-info/PKG-INFO
 frame_fwl.egg-info/SOURCES.txt
 frame_fwl.egg-info/dependency_links.txt
 frame_fwl.egg-info/top_level.txt
 tests/test_arch.py
 tests/test_basics_ru.py
+tests/test_nets1.py
 tests/test_neural.py
 tests/test_simples1.py

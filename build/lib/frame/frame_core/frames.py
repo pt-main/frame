@@ -3,8 +3,8 @@ import threading
 import pickle
 import json
 from typing import Dict, Any
-from frame.frame_core.exceptions import *
-from frame.frame_core.funcs import exec_and_return, str_to_int
+from .exceptions import *
+from .funcs import exec_and_return, str_to_int
 import ast, inspect
 
 
@@ -296,9 +296,6 @@ result: 500
         self.__safemode = safemode
         self._name = name
         System.framers[name] = self.framer
-        std = '''
-'''
-        self.Code(std)
     def Sys(self) -> SystemOP: 
         '''Return [System] class.'''
         return SystemOP
@@ -322,9 +319,10 @@ result: 500
     def Return(self, name: Var) -> Return: 
         '''Set of variable to return.'''
         return Return(name, self.framer)
-    def Code(self, code: str, *comentaries) -> Code:
+    def Code(self, code: str, comentary: bool = True, *comentaries) -> Code:
         '''Append code to frame.'''
-        self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
+        if comentary:
+            self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
     def Exec(self) -> Any:
         '''Executing code of frame.'''
@@ -357,13 +355,15 @@ result: 500
                                 if can_edit_tabs: tabs = t/4
                             tabbed = True
                         can_edit_tabs = False
-                    if not i.startswith('   '): tabbed = False
+                    if not i.startswith('   '): tabbed = False; can_edit_tabs = False
                     if tabbed: 
                         tabs_c = int(4 * tabs)
                         cleaned_code.append(i[tabs_c:])
+                    else: 
+                        cleaned_code.append(i)
                 cleaned_code = '\n'.join(cleaned_code)
                 type = cleaned_code.split(" ")[0]
-                self.Code(f"\n# Registred construction: {type} {func_name}\n{cleaned_code}")
+                self.Code(f"\n# Registred construction: {type} {func_name}\n{cleaned_code}", True, f'Registring [{type} {func_name}] construcntion.')
             except Exception as e:
                 print(f"Warning: Could not register source code for {func_name}: \n{e}")
                 self.Var(func_name, func, to_repr=False)
