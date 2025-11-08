@@ -86,7 +86,7 @@ Latest version will installed with framework to frame.frame_core.
 - Cross-session state persistence
 
 ### 🌐 Nets  
-This concept is in its early stages. It will include modules for cryptography, internet security, and white/gray hacking tools for educational purposes.
+This concept is in its early stages. It will include modules for cryptography, internet security, and white/gray hacking tools for educational ONLY purposes.
 
 Currently, the concept is in development. Latest version will installed with framework to frame.nets_core.
 
