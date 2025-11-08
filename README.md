@@ -1,9 +1,5 @@
 # The Frame Framework  
-![python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)  
-![dev](https://img.shields.io/badge/Development-By_pt-ff002f)  
-![status](https://img.shields.io/badge/Status-0.4.1-00cc52)  
-![rights](https://img.shields.io/badge/Rights_holder-Intelektika--team-b100cc)  
-![design](https://img.shields.io/badge/PyPI_name-frame--fwl-F2A400)  
+![python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![dev](https://img.shields.io/badge/Development-By_pt-ff002f) ![status](https://img.shields.io/badge/Status-0.4.1-00cc52) ![rights](https://img.shields.io/badge/Rights_holder-Intelektika--team-b100cc) ![design](https://img.shields.io/badge/PyPI_name-frame--fwl-F2A400)
 
 Frame is a multifunctional framework that combines concepts implemented as separate packages.  
 
