@@ -94,4 +94,3 @@ Currently, the concept is in development. Latest version will installed with fra
 ## 🔗 Links
 - [Our Team](https://github.com/Intelektika-team/)
 - [Main developer](https://github.com/pt-main)
-- [💬 Discussions](https://github.com/your-repo/discussions)
