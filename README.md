@@ -3,7 +3,7 @@
 
 Frame is a multifunctional framework that combines concepts implemented as separate packages.  
 
-| Package | Concept | Terms | Version |  
+| Concept | Short Descripton | Terms | Version |  
 | :--- | :--- | :--- | :--- |  
 | Frames | Creating isolated contexts for code execution and configuration. | Frame, Framing, Framefile, Superglobal | 0.4.12 |  
 | Nets | Cryptography, white/gray hacking, and internet security. | None yet | 0.1.1 |  
