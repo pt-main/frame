@@ -21,8 +21,10 @@ class PluginBase(ABC):
         self._check_dependencies()
         if not self._state['included']:
             self.frame: Frame = Frame() if not self._has_frame else self.frame
-            self.frame.Code(f'import ({", ".join(self._dependencies)})')
+            self.frame.Code(f'import {", ".join(self._dependencies)}') if self._dependencies is not [] else None
             self._state['included'] = True
+    def _set_dependencies(self, deps: list):
+        self._dependencies = deps
     def _check_dependencies(self):
         for dep in self._dependencies:
             try: importlib.import_module(dep)

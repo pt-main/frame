@@ -41,6 +41,7 @@ For system.
         super().__init__()
         self._vars = {}
         self._aliases = {}
+        self._types = {}
         self._lock = threading.RLock()
         self._new_code_line = self._new_line
     
@@ -145,6 +146,7 @@ Abstraction api class for [Framer] and [System].
 - {to_repr}: bool - if true, value in variable will be repr(value).
 - {with_eval}: bool - if true, value in variable will be ```f'eval({repr(value)})'```.
 - {framer}: Framer | None - Framer object.
+- {check_for_constant}: bool - check is variable constant if true
 
 
 ### Example: 
@@ -159,7 +161,8 @@ Var('x', 10, framer = ctx) # setting variable
                  type: str = 'int', 
                  to_repr: bool = True, 
                  with_eval: bool = False,
-                 framer: Framer | None | str = 'System'):
+                 framer: Framer | None | str = 'System',
+                 check_for_constant: bool = True):
         framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
         param_name = framer._gen_temp_var()
         self.name = param_name
@@ -168,7 +171,12 @@ Var('x', 10, framer = ctx) # setting variable
         val = repr(value) if to_repr else value
         val = f'eval({val})' if with_eval else val
         with framer._lock:
+            if name in framer._types and check_for_constant:
+                if framer._types[name] == 'const':
+                    raise VariableTypeError(f'Variable already declared with type [{type}]. It cannot be overwritten.')
             framer.var(param_name, value)
+            framer._types[name] = type
+            type = type.replace("const", "int")
             framer._new_line(f'{name}: {type} = {val}')
             framer._aliases[name] = param_name
         self.framer = framer
@@ -310,9 +318,16 @@ result: 500
             value, 
             type: str = 'int', 
             to_repr: bool = True,
-            with_eval: bool = False) -> Var:
+            with_eval: bool = False,
+            check_for_constant: bool = False) -> Var:
         '''Creating variable.'''
-        return Var(name, value, type, to_repr, with_eval, self.framer)
+        return Var(name = name, 
+                   value = value, 
+                   type = type, 
+                   to_repr = to_repr, 
+                   with_eval = with_eval, 
+                   framer = self.framer, 
+                   check_for_constant = check_for_constant)
     def Get(self, name: str) -> Any: 
         '''Get variable by name.'''
         return Get(name, self.framer)
@@ -380,7 +395,8 @@ result: 500
             'framer': {
                 '_code': self.framer._code,
                 '_vars': self.framer._vars,
-                '_aliases': self.framer._aliases
+                '_aliases': self.framer._aliases,
+                '_types': self.framer._types
             },
             'saving': self.__saving,
             'safemode': self.__safemode,
@@ -394,7 +410,8 @@ result: 500
                     'framer': {
                         '_code': data['framer']['_code'],
                         '_vars': {k: str(v) for k, v in data['framer']['_vars'].items()},  # Приводим к строке для JSON
-                        '_aliases': data['framer']['_aliases']
+                        '_aliases': data['framer']['_aliases'],
+                        '_types': data['framer']['_types']
                     },
                     'safemode': data['safemode'],
                     'saving': data['saving'],
@@ -434,6 +451,7 @@ result: 500
             self.framer._code = data['framer']['_code']
             self.framer._vars = data['framer']['_vars'] 
             self.framer._aliases = data['framer']['_aliases']
+            self.framer._types = data['framer']['_types']
             self.__safemode = data['safemode']
             self.__saving = data['saving']
             self._name = data['name']

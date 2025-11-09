@@ -102,8 +102,7 @@ def bytest1(k: int):
 # looks bad & not incrasement
 print(bytest1(k))
 
-
-
+print('some =========')
 
 with Frame(safemode=False, save_while_exit=True, save_args=['ctx.json', 'json']) as f:
     m = PluginRegistry.get_plugin('math', f).include()
@@ -125,15 +124,24 @@ print(f'y = {y}')
     fVar('k', 0.4567897086543678965)
     fVar('test3', '(k + (test / z)) ** k', with_eval=True)
     fVar('test2', 'test3 + (((test ** z) - (y << x)) ** k)', with_eval=True)
+    fCode('print("====")')
     m.sqrt('test2').relu('res').parabola('res').discriminant(2, 89, 6, 'res4').discriminant(2, 64, 15, 'res5')
-    code = '''result = (x + y + test + z + k + test3 + test2 + sum(res4)) ** (res5[0] * res5[1])'''
+    fCode('print("====")')
+    code = '''
+try: result = (x + y + test + z + k + test3 + test2 + sum(res4)) ** (res5[0] * res5[1])
+except Exception as e: raise ValueError(f'1-{x}, 2-{y}, 3-{test}, 4-{z}, 5-{k}, 6-{test2}, 7-{test2}, 8-{sum(res4)}, 9-{sum(res5)} 10-{res4}, 11-{res5}, Err: {e}')
+'''
     f.Code(code)
+    fCode('print("====")')
     fVar('res', 'result ** k + res', with_eval=True)
+    fCode('print(res)')
+    fVar('test', 10, 'const')
 with Frame().load('ctx.json', 'json') as f:
     code = f.compile()
-    res = exec_and_return(code, 'res')
+    res = exec_and_return(code, 'res', locals(), globals())
     print('result:', res)
-    print(code)
+    save_code_to_bin()
+    fVar('test', 10, 'const')
 
 
 '''
@@ -141,18 +149,28 @@ with Frame().load('ctx.json', 'json') as f:
 frame
 16536
 test
-10 <frame.op.Framer object at 0x103429fd0>
+10 <frame.frame_core.frames.Framer object at 0x110a916d0>
 10
 80
 Input start number: 5
 14615016373309029182036848327162830196559325429760
 14615016373309029182036848327162830196559325429760
 14615016373309029182036848327162830196559325429760
+some =========
+1
 y bigger
 x = 3
 y = 56
+====
+====
+====
+44369621299267.914
 result: 44369621299267.914
+1
+2
+Traceback (most recent call last):
+  File "/Users/macbook/Desktop/Frame/tests/test_arch.py", line 147, in <module>
+  File "/Users/macbook/Desktop/Frame/frame/frame_core/frames.py", line 178, in __init__
+    raise VariableTypeError(f'Variable already declared with type [{type}]. It cannot be overwritten.')
+frame.frame_core.exceptions.VariableTypeError: Variable already declared with type [const]. It cannot be overwritten.
 '''
-
-
-FramesComposer()

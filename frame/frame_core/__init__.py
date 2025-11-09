@@ -13,7 +13,7 @@ The Frames - multitool programming paradigm.
 
 ### Functions: 
     #### Framer functions -
-        Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
+        Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fOp, fReturn, fCode, @framing, 
         framing_result
     #### Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
@@ -38,7 +38,7 @@ Not for web development.
 '''
 
 from .frames import (Framer, Frame, FramesComposer, Exec as fExec, Get as fGet, Var as fVar, 
-                System as fSys, Return as fReturn, Code as fCode)
+                System as fSys, SystemOP as fOp, Return as fReturn, Code as fCode)
 from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
@@ -62,7 +62,7 @@ arg {name_of_result_variable}:  str = 'res' -
 - Variable that will be created in {framer}.
     
 arg {return_frame}:  bool = False -
-- Args for choise create 'frame' variable (Frame object) in System.frames['temp'] .
+- Args for choise create 'frame' variable (Frame object named `frame`) in System.frames['temp'].
 ### Examples:
 #### First code example: 
 ```
@@ -144,7 +144,8 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 def open_and_run(filename: str = 'ctx.json', 
                  format: str = 'json', 
                  name_of_result_var: str = 'res',
-                 returning_format: str = 'result', exec_method = 'basic') -> any | Frame:
+                 returning_format: str = 'result', 
+                 exec_method: str = 'basic') -> any | Frame:
     '{returning_format} - result/frame \n\n{exec_method} - basic/safe'
     if returning_format == 'result':
         with Frame().load(filename, format) as f: 
