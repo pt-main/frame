@@ -16,6 +16,9 @@ class PluginError(Exception):
 class FrameExecutionError(Exception):
     def __init__(self, *args):
         super().__init__(*args)
+class VariableTypeError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
 class FrameComposeError(Exception):
     def __init__(self, framer_name = '', exception = '', exception_text = ''):
         self.text = f'''\n

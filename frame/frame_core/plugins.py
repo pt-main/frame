@@ -9,9 +9,9 @@ class MathPlugin(PluginBase):
     You have to run `include` method before using Plugin.
     
     Argument {framer}: Framer | None - frame context to using lib (only without safemode)'''
-    _dependencies = ['math', 'cmath']
     def __init__(self, frame = None):
         super().__init__(frame)
+        self._set_dependencies(['math', 'cmath'])
         self._state = {'included': False, 'safemode': self.frame._get_safemode()}
         self._version = 'v0.1.1'
         self._counter = 0
@@ -26,7 +26,10 @@ class MathPlugin(PluginBase):
 classic_sum = sum
 def sum(n):
     try: return classic_sum(n)
-    except: return n
+    except Exception as e:
+        if 'debug' in locals().keys() or 'debug' in globals().keys() and debug == True: 
+            print(f'Summing error: {e}')
+        return n
 '''
             self.frame.Code(std)
             self.frame.Code(f'\n_math_plugin_ver = {repr(self._version)}')
