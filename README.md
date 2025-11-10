@@ -1,5 +1,9 @@
 # The Frame Framework  
+
+<img width="3840" height="800" alt="framepng" src="https://github.com/user-attachments/assets/f2d18dbc-a767-4434-aa6f-57bb0a700daf" />
+
 ![python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white) ![dev](https://img.shields.io/badge/Development-By_pt-ff002f) ![status](https://img.shields.io/badge/Status-Alpha-00cc52) ![rights](https://img.shields.io/badge/Rights_holder-Intelektika--team-b100cc) ![design](https://img.shields.io/badge/PyPI_name-frame--fwl-F2A400)
+
 
 Frame is a multifunctional framework that combines concepts implemented as separate packages.  
 
@@ -93,3 +97,7 @@ Currently, the concept is in development. Latest version will installed with fra
 ## 🔗 Links
 - [Our Team](https://github.com/Intelektika-team/)
 - [Main developer](https://github.com/pt-main)
+
+
+
+<img width="3840" height="2160" alt="fw_logo" src="https://github.com/user-attachments/assets/8c1d901e-4826-49e3-b440-a791aebc089b" />
