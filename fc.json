@@ -1,0 +1,171 @@
+{
+  "_frames": {
+    "test1": {
+      "framer": {
+        "_code": [
+          "\"\"\"code section\nFramer: f1\nSafemode: False\nRegistring [def test] construcntion.\"\"\"",
+          "\n# Registred construction: def test\ndef test():\n    return 'compleate'\n",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "import math, cmath",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\nclassic_sum = sum\ndef sum(n):\n    try: return classic_sum(n)\n    except Exception as e:\n        if 'debug' in locals().keys() or 'debug' in globals().keys() and debug == True: \n            print(f'Summing error: {e}')\n        return n\n",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\n_math_plugin_ver = 'v0.1.1'",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\"\"\"\ndiscriminant\nReturning: frame\nName of result var: res\nInputs: [10, 20, 30]\"\"\"",
+          "__temp_a_math1_id21201: int = eval('10')",
+          "__temp_b_math1_id21201: int = eval('20')",
+          "__temp_c_math1_id21201: int = eval('30')",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\nif __temp_a_math1_id21201 == 0: __temp_a_math1_id21201 += 1\n__temp_D_math1_id21201 = (__temp_b_math1_id21201 ** 2) - (4 * __temp_a_math1_id21201 * __temp_c_math1_id21201)\nif __temp_D_math1_id21201 >= 0: __temp_sqrt_D_math1_id21201 = math.sqrt(__temp_D_math1_id21201)\nelse: __temp_sqrt_D_math1_id21201 = cmath.sqrt(__temp_D_math1_id21201)\n__temp_x1_math1_id21201 = (-__temp_b_math1_id21201 + __temp_sqrt_D_math1_id21201) / (2 * __temp_a_math1_id21201)\n__temp_x2_math1_id21201 = (-__temp_b_math1_id21201 - __temp_sqrt_D_math1_id21201) / (2 * __temp_a_math1_id21201)\nres = [__temp_x1_math1_id21201, __temp_x2_math1_id21201, __temp_D_math1_id21201]\n",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\"\"\"\ndiscriminant\nReturning: frame\nName of result var: res\nInputs: [20, 20, 80]\"\"\"",
+          "__temp_a_math2_id40632: int = eval('20')",
+          "__temp_b_math2_id40632: int = eval('20')",
+          "__temp_c_math2_id40632: int = eval('80')",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\"\"\"",
+          "\nif __temp_a_math2_id40632 == 0: __temp_a_math2_id40632 += 1\n__temp_D_math2_id40632 = (__temp_b_math2_id40632 ** 2) - (4 * __temp_a_math2_id40632 * __temp_c_math2_id40632)\nif __temp_D_math2_id40632 >= 0: __temp_sqrt_D_math2_id40632 = math.sqrt(__temp_D_math2_id40632)\nelse: __temp_sqrt_D_math2_id40632 = cmath.sqrt(__temp_D_math2_id40632)\n__temp_x1_math2_id40632 = (-__temp_b_math2_id40632 + __temp_sqrt_D_math2_id40632) / (2 * __temp_a_math2_id40632)\n__temp_x2_math2_id40632 = (-__temp_b_math2_id40632 - __temp_sqrt_D_math2_id40632) / (2 * __temp_a_math2_id40632)\nres = [__temp_x1_math2_id40632, __temp_x2_math2_id40632, __temp_D_math2_id40632]\n"
+        ],
+        "_vars": {
+          "__tmp_11": "10",
+          "__tmp_13": "20",
+          "__tmp_15": "30",
+          "__tmp_22": "20",
+          "__tmp_24": "20",
+          "__tmp_26": "80"
+        },
+        "_aliases": {
+          "__temp_a_math1_id21201": "__tmp_11",
+          "__temp_b_math1_id21201": "__tmp_13",
+          "__temp_c_math1_id21201": "__tmp_15",
+          "__temp_a_math2_id40632": "__tmp_22",
+          "__temp_b_math2_id40632": "__tmp_24",
+          "__temp_c_math2_id40632": "__tmp_26"
+        },
+        "_types": {
+          "__temp_a_math1_id21201": "int",
+          "__temp_b_math1_id21201": "int",
+          "__temp_c_math1_id21201": "int",
+          "__temp_a_math2_id40632": "int",
+          "__temp_b_math2_id40632": "int",
+          "__temp_c_math2_id40632": "int"
+        }
+      },
+      "saving": [
+        false,
+        [
+          "ctx",
+          "pickle"
+        ]
+      ],
+      "safemode": false,
+      "name": "f1"
+    },
+    "test2": {
+      "framer": {
+        "_code": [
+          "\"\"\"code section\nFramer: f1\nSafemode: False\nRegistring [def test] construcntion.\"\"\"",
+          "\n# Registred construction: def test\ndef test():\n    return 'compleate'\n",
+          "x: int = 10",
+          "y: int = 50",
+          "\"\"\"condition block\nx > y\"\"\"",
+          "__condition_temp_id19567: int = eval('x > y')",
+          "if __condition_temp_id19567:",
+          "    \n    print(\"x bigger\")",
+          "else:",
+          "    \n    print(\"y bigger\")",
+          "test: int = 500",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\nRegistring [def test] construcntion.\"\"\"",
+          "\n# Registred construction: def test\ndef test(): \n    print('testing')\n",
+          "\"\"\"code section\nFramer: f1\nSafemode: False\nRegistring [class Test] construcntion.\"\"\"",
+          "\n# Registred construction: class Test\nclass Test():\n    hello = 'World'\n    pass\n"
+        ],
+        "_vars": {
+          "__tmp_2": 10,
+          "__tmp_4": 50,
+          "__tmp_8": "x > y",
+          "__tmp_14": 500,
+          "__tmp_11": "10",
+          "__tmp_13": "20",
+          "__tmp_15": "30",
+          "__tmp_22": "20",
+          "__tmp_24": "20",
+          "__tmp_26": "80"
+        },
+        "_aliases": {
+          "x": "__tmp_2",
+          "y": "__tmp_4",
+          "__condition_temp_id19567": "__tmp_8",
+          "test": "__tmp_14",
+          "__temp_a_math1_id21201": "__tmp_11",
+          "__temp_b_math1_id21201": "__tmp_13",
+          "__temp_c_math1_id21201": "__tmp_15",
+          "__temp_a_math2_id40632": "__tmp_22",
+          "__temp_b_math2_id40632": "__tmp_24",
+          "__temp_c_math2_id40632": "__tmp_26"
+        },
+        "_types": {
+          "x": "int",
+          "y": "int",
+          "__condition_temp_id19567": "int",
+          "test": "int"
+        }
+      },
+      "saving": [
+        false,
+        [
+          "ctx",
+          "pickle"
+        ]
+      ],
+      "safemode": false,
+      "name": "f1"
+    }
+  },
+  "_superglobal_name": "sgc",
+  "_arch": "dict",
+  "_deps": [
+    "test1",
+    "test2"
+  ],
+  "__safemode": false,
+  "sgc": {
+    "framer": {
+      "_code": [],
+      "_vars": {
+        "__tmp_2": 10,
+        "__tmp_4": 50,
+        "__tmp_8": "x > y",
+        "__tmp_14": 500,
+        "__tmp_11": "10",
+        "__tmp_13": "20",
+        "__tmp_15": "30",
+        "__tmp_22": "20",
+        "__tmp_24": "20",
+        "__tmp_26": "80"
+      },
+      "_aliases": {
+        "x": "__tmp_2",
+        "y": "__tmp_4",
+        "__condition_temp_id19567": "__tmp_8",
+        "test": "__tmp_14",
+        "__temp_a_math1_id21201": "__tmp_11",
+        "__temp_b_math1_id21201": "__tmp_13",
+        "__temp_c_math1_id21201": "__tmp_15",
+        "__temp_a_math2_id40632": "__tmp_22",
+        "__temp_b_math2_id40632": "__tmp_24",
+        "__temp_c_math2_id40632": "__tmp_26"
+      },
+      "_types": {}
+    },
+    "saving": [
+      false,
+      [
+        "ctx",
+        "pickle"
+      ]
+    ],
+    "safemode": false,
+    "name": "sgc"
+  }
+}
