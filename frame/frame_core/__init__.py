@@ -28,6 +28,7 @@ The Frames - multitool programming paradigm.
     - Framing - creating a local environment with superglobal variables.
     - Superglobal is the state of an object when it does not depend on the context. Roughly speaking, a global frame.
     - Framefile is a binary frame image that can be saved and loaded.
+    - fcomp iso - Frames composition file
 
 ### Warning: 
 Main clases of frame (like [Framer], for example) using eval/compile/exec. 
@@ -37,8 +38,9 @@ If you want to protect your porgram (full off exec), you can use {safemode} in F
 Not for web development.
 '''
 
-from .frames import (Framer, Frame, FramesComposer, Exec as fExec, Get as fGet, Var as fVar, 
+from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
                 System as fSys, SystemOP as fOp, Return as fReturn, Code as fCode)
+from .composer import (FramesComposer)
 from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)

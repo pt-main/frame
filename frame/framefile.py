@@ -14,7 +14,7 @@ Args -
         stjson [name] - start json framefile
         stpick [name] - start pickle framefile
         GROUP_ARGS:
-            -s - safemode
+            -s - turn safemode
             NOTE: without safemode file can show errors
         GROUP_FORMAT:
             command [name] -[safemode]
@@ -22,7 +22,7 @@ Args -
     GROUP help:
         getcode_s / getcode [name] - get code of frame (safe/unsafe)
         compile_s / compile [name] [out_name] - compile framefile to .py file (safe/unsafe)
-        is_safe / is_safe_s [name] - check safemode for framefile (safe/unsafe)
+        is_safe_s / is_safe [name] - check safemode for framefile (safe/unsafe)
         NOTE: without safemode file can show errors
         NOTE: safe/unsafe - load mode
         GROUP_ARGS:
@@ -108,7 +108,7 @@ def main():
         'is_safe': lambda: print('Safemode:', is_safe(args, args_count, False)) if args_count >= 1 else FileNotFoundError("Filename required"),
         'is_safe_s': lambda: print('Safemode:', is_safe(args, args_count, True)) if args_count >= 1 else FileNotFoundError("Filename required"),
         '-h': lambda: help(),
-        '-v': lambda: print(f'Frames Concept {_framecore_version_}'),
+        '-v': lambda: print(f'Frames Concept v{_framecore_version_}'),
     }
     command = command.lower()
     if command in command_handlers:
