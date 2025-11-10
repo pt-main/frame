@@ -391,12 +391,32 @@ result: 500
             {filename}: str - file name
             {format}: str - saving format ('pickle' or 'json')
         '''
-        data = self.data
+        data = {
+            'framer': {
+                '_code': self.framer._code,
+                '_vars': self.framer._vars,
+                '_aliases': self.framer._aliases,
+                '_types': self.framer._types
+            },
+            'saving': self.__saving,
+            'safemode': self.__safemode,
+            'name': self._name
+        }
         try:
             if format == 'pickle':
                 with open(filename, 'wb') as f: pickle.dump(data, f)
             elif format == 'json':
-                json_data = self._serealize('json')
+                json_data = {
+                    'framer': {
+                        '_code': data['framer']['_code'],
+                        '_vars': {k: str(v) for k, v in data['framer']['_vars'].items()},  # Приводим к строке для JSON
+                        '_aliases': data['framer']['_aliases'],
+                        '_types': data['framer']['_types']
+                    },
+                    'safemode': data['safemode'],
+                    'saving': data['saving'],
+                    'name': data['name']
+                }
                 with open(filename, 'w', encoding='utf-8') as f: 
                     json.dump(json_data, f, indent=2, ensure_ascii=False)
             else: raise FrameApiError(f"Unsupported format: {format}")
@@ -428,47 +448,16 @@ result: 500
                             raise FrameApiError(f'Error in parsing parameters: {e}')
                 data['framer']['_vars'] = restored_vars
             else: raise FrameApiError(f"Unsupported format: {format}")
-            self._load_data(data)
+            self.framer._code = data['framer']['_code']
+            self.framer._vars = data['framer']['_vars'] 
+            self.framer._aliases = data['framer']['_aliases']
+            self.framer._types = data['framer']['_types']
+            self.__safemode = data['safemode']
+            self.__saving = data['saving']
+            self._name = data['name']
             return self
         except Exception as e:
             raise FrameApiError(f"Load failed: {e}")
-    @property
-    def data(self):
-        return {
-                'framer': {
-                    '_code': self.framer._code,
-                    '_vars': self.framer._vars,
-                    '_aliases': self.framer._aliases,
-                    '_types': self.framer._types
-                },
-                'saving': self.__saving,
-                'safemode': self.__safemode,
-                'name': self._name
-                }
-
-    def _serealize(self, form: str = 'pickle' ):
-        data = self.data
-        json_data = {
-            'framer': {
-                '_code': data['framer']['_code'],
-                '_vars': {k: str(v) for k, v in data['framer']['_vars'].items()},  # Приводим к строке для JSON
-                '_aliases': data['framer']['_aliases'],
-                '_types': data['framer']['_types']
-            },
-            'safemode': data['safemode'],
-            'saving': data['saving'],
-            'name': data['name']
-        }
-        return data if form == 'pickle' else json_data
-    def _load_data(self, data: dict):
-        self.framer._code = data['framer']['_code']
-        self.framer._vars = data['framer']['_vars'] 
-        self.framer._aliases = data['framer']['_aliases']
-        self.framer._types = data['framer']['_types']
-        self.__safemode = data['safemode']
-        self.__saving = data['saving']
-        self._name = data['name']
-        return self
     def _get_safemode(self): return self.__safemode
     def __enter__(self): 
         self.framer.__enter__()
@@ -479,6 +468,111 @@ result: 500
         return self.framer
     def __getitem__(self, index):
         return self.Get(index)
+
+
+class FramesComposer:
+    '''
+# FramesComposer
+    '''
+    def __init__(self, safemode: bool = False, arch: str = 'dict', superglobal_name: str = 'sgc'):
+        'arch - dict/array (array is experemental)'
+        framer = 'new' 
+        self.__safemode = safemode
+        save_while_exit = False
+        save_args = ['ctx', 'pickle']
+        self._superglobal_name = superglobal_name
+        self.sgc = Frame(framer, self.__safemode, superglobal_name, save_while_exit, save_args) # superglobal context
+        self._frames: list[Frame] | dict[str, Frame] = {} if arch == 'dict' else []
+        self._arch = arch
+    def load_frame(self, index: str | int, frame: Frame) -> FramesComposer:
+        if self._arch == 'dict': self._frames[index] = frame
+        else: 
+            pre = self._frames[:index-1]
+            after = self._frames[index:]
+            _frames = pre + [frame] + after
+            self._frames = _frames
+        return self
+    def get_frame(self, index: str | int) -> Frame:
+        try: return self._frames[int(index) if self._arch == 'array' else index]
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
+    def sync(self, name_1: str, name_2: str) -> FramesComposer:
+        f1 = self._frames[name_1]
+        f2 = self._frames[name_2]
+        new_dict1 = {}
+        for i in f1.framer._aliases: 
+            new_dict1[i] = f1.framer._aliases[i]
+        for i in f2.framer._aliases: 
+            new_dict1[i] = f2.framer._aliases[i]
+        f1.framer._aliases = new_dict1
+        f2.framer._aliases = new_dict1
+        new_dict2 = {}
+        for i in f1.framer._vars: 
+            new_dict2[i] = f1.framer._vars[i]
+        for i in f2.framer._vars: 
+            new_dict2[i] = f2.framer._vars[i]
+        f1.framer._vars = new_dict2
+        f2.framer._vars = new_dict2
+        return self
+    def superglobal(self) -> Framer: return self.sgc
+    def __enter__(self) -> FramesComposer: return self
+    def __exit__(self, *args, **kwargs): pass
+    def __call__(self, *args, **kwds) -> Frame: return self.superglobal()
+    def __add__(self, other: Frame) -> None: 
+        if isinstance(other, Frame): self.load_frame(len(self._frames) if self._arch == 'array' else other._name, other)
+        else: raise FrameComposeError('', 'NotSuuportableObject', f"Inncorect attemp to add {type(other)} object to frames.")
+    def __getitem__(self, index) -> Frame:
+        try: return self._frames[index]
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
+        except Exception as e: raise FrameComposeError(index, 'GetItemError', e)
+    def __setitem__(self, index, value):
+        try: self.load_frame(index, value)
+        except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
+        except Exception as e: raise FrameComposeError(index, 'SetItemError', e)
+    def __eq__(self, value) -> bool:
+        if isinstance(value, FramesComposer): 
+            cond1 = value.__safemode == self.__safemode and value._arch == self._arch
+            cond2 = value.sgc._name == self.sgc._name  and value._superglobal_name == self._superglobal_name
+            return cond1 and cond2
+        else: return False
+    def __format__(self, format_spec: str) -> str:
+        if format_spec == '.all': return str(self._frames)
+        elif format_spec.startswith('.get>'):
+            index = format_spec[5:]
+            list = {}
+            counter = 0
+            for i in self._frames: 
+                list[str(counter)] = self._frames[i]
+                counter += 1
+            try: return str(list[str(index)])
+            except (KeyError) as e: 
+                raise FrameComposeError(f'index<{index}>', 'GetItemError', f'Unknown key: {e}')
+            except Exception as e: raise FrameComposeError(index, 'fStringError', e)
+        elif format_spec.startswith('.getname>'):
+            index = format_spec[9:]
+            list = {}
+            counter = 0
+            for i in self._frames: 
+                list[str(counter)] = i
+                counter += 1
+            try: return list[str(index)]
+            except (KeyError) as e: 
+                raise FrameComposeError(f'index<{index}>', 'GetItemError', f'Unknown key: {e}')
+            except Exception as e: raise FrameComposeError(index, 'fStringError', e)
+        elif format_spec.startswith('.safemode'):
+            return str(self.__safemode)
+        elif format_spec.startswith('.hash'):
+            return str(self.__hash__())
+        elif format_spec.startswith(('.sgc', '.superglobal', '.sgcname')): 
+            return self.sgc._name
+        raise ValueError('Unknown format option.')
+    def __hash__(self) -> int:
+        arch = str_to_int(self._arch)
+        frames = str_to_int(self._frames)
+        safemode = str_to_int(self.__safemode)
+        superglobal = str_to_int(self._superglobal_name)
+        return arch+frames+safemode+superglobal
+    def __int__(self):
+        return self.__hash__()
 
 
 
@@ -525,6 +619,15 @@ if __name__ == '__main__':
     with Frame().load('ctx.json', format='json') as f:
         code = f.compile()
         print('result:', exec_and_return(code, 'test'))
+    with FramesComposer() as fc:
+        fc.load_frame('test', Frame(name='test1'))
+        print(fc['test']._name)
+        fc['test'] = Frame()
+        fc['test1'] = Frame()
+        print(fc['test']._name)
+        fc.sync('test', 'test1')
+    print(f'{fc:.get>0}, {fc:.getname>0}, {fc:.sgc}, {fc:.hash}, {fc:.safemode}')
+    print(hash(fc))
     print('\n\n======= CODE =======')
     print(code)
     '''

@@ -13,7 +13,7 @@ The Frames - multitool programming paradigm.
 
 ### Functions: 
     #### Framer functions -
-        Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fReturn, fCode, @framing, 
+        Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fOp, fReturn, fCode, @framing, 
         framing_result
     #### Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
@@ -28,6 +28,7 @@ The Frames - multitool programming paradigm.
     - Framing - creating a local environment with superglobal variables.
     - Superglobal is the state of an object when it does not depend on the context. Roughly speaking, a global frame.
     - Framefile is a binary frame image that can be saved and loaded.
+    - fcomp iso - Frames composition file
 
 ### Warning: 
 Main clases of frame (like [Framer], for example) using eval/compile/exec. 
@@ -37,13 +38,14 @@ If you want to protect your porgram (full off exec), you can use {safemode} in F
 Not for web development.
 '''
 
-from .frames import (Framer, Frame, FramesComposer, Exec as fExec, Get as fGet, Var as fVar, 
-                System as fSys, Return as fReturn, Code as fCode)
+from .frames import (Framer, Frame, Exec as fExec, Get as fGet, Var as fVar, 
+                System as fSys, SystemOP as fOp, Return as fReturn, Code as fCode)
+from .composer import (FramesComposer)
 from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
 
-__core_version__ = '0.4.12'
+_framecore_version_ = '0.4.12'
 
 def framing(
     framer: str | Framer = 'new',
@@ -62,7 +64,7 @@ arg {name_of_result_variable}:  str = 'res' -
 - Variable that will be created in {framer}.
     
 arg {return_frame}:  bool = False -
-- Args for choise create 'frame' variable (Frame object) in System.frames['temp'] .
+- Args for choise create 'frame' variable (Frame object named `frame`) in System.frames['temp'].
 ### Examples:
 #### First code example: 
 ```
@@ -144,7 +146,8 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
 def open_and_run(filename: str = 'ctx.json', 
                  format: str = 'json', 
                  name_of_result_var: str = 'res',
-                 returning_format: str = 'result', exec_method = 'basic') -> any | Frame:
+                 returning_format: str = 'result', 
+                 exec_method: str = 'basic') -> any | Frame:
     '{returning_format} - result/frame \n\n{exec_method} - basic/safe'
     if returning_format == 'result':
         with Frame().load(filename, format) as f: 
