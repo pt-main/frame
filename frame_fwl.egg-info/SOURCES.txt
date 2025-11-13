@@ -31,8 +31,9 @@ frame_fwl.egg-info/dependency_links.txt
 frame_fwl.egg-info/entry_points.txt
 frame_fwl.egg-info/requires.txt
 frame_fwl.egg-info/top_level.txt
-tests/test_arch.py
-tests/test_basics_ru.py
-tests/test_nets1.py
-tests/test_neural.py
-tests/test_simples1.py
+unitests/__init__.py
+unitests/test_composer.py
+unitests/test_core.py
+unitests/test_integration.py
+unitests/test_performance.py
+unitests/test_plugins.py

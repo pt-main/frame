@@ -57,16 +57,14 @@ For system.
         self._code.append(code_line)
         return result_var
     
-    def execute(self, algoritm = 1):
+    def execute(self):
         try:
             final_code = "\n".join(self._code)
             local_scope = self._vars.copy()
             compiled = compile(final_code, '<string>', 'exec')
             exec(compiled, {}, local_scope)
-            if algoritm == 1:
-                return_var = "__frame_return_value"
-                return local_scope.get(return_var) 
-            return local_scope
+            return_var = "__frame_return_value"
+            return local_scope.get(return_var) 
         except Exception as e:
             raise FrameExecutionError(f"Error in frame execution: {e}\nCode:\n{final_code}")
     
@@ -255,13 +253,13 @@ result: 560
         self._code = code
         self.framer = framer
 
-def Exec(framer: Framer | None | str = 'System', algoritm: int = 1):
+def Exec(framer: Framer | None | str = 'System'):
     '''
 Execution of [Frame] method.
     '''
     framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
     with framer._lock:
-        return framer.execute(algoritm)
+        return framer.execute()
     
 class Frame:
     '''
@@ -341,9 +339,9 @@ result: 500
         if comentary:
             self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
-    def Exec(self, algoritm: int = 1) -> Any:
+    def Exec(self) -> Any:
         '''Executing code of frame.'''
-        if not self.__safemode: return Exec(self.framer, algoritm)
+        if not self.__safemode: return Exec(self.framer)
         else: raise FrameApiError('Exec is not avialable in safemode.')
     def compile(self) -> str: 
         '''Get full code of frame.'''

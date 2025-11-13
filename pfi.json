@@ -1,0 +1,37 @@
+{
+  "_frames": {},
+  "_superglobal_name": "sgc",
+  "_arch": "dict",
+  "_deps": [],
+  "__safemode": false,
+  "sgc": {
+    "framer": {
+      "_code": [
+        "\"\"\"code section\nFramer: sgc\nSafemode: False\nRegistring [def calculate] construcntion.\"\"\"",
+        "\n# Registred construction: def calculate\ndef calculate(expr: str): \n    res = eval(expr)\n    print('Formula:', expr); print(f'Result: {res}'); print(expr, '=', res, '\\n')\n",
+        "def main(): ",
+        "    try: ",
+        "        choise = input('IDLE or calc: ').lower(); print('\\n'*2) ",
+        "        if choise == 'calc': ",
+        "            while True: calculate(input('>>> ')) ",
+        "        else: ",
+        "            local_scope = locals(); global_scope = globals() ",
+        "            while True: exec(input('>>> '), global_scope, local_scope) ",
+        "    except KeyboardInterrupt: print('\\n>>> Exiting...'); time.sleep(1); return ",
+        "main()"
+      ],
+      "_vars": {},
+      "_aliases": {},
+      "_types": {}
+    },
+    "saving": [
+      false,
+      [
+        "ctx",
+        "pickle"
+      ]
+    ],
+    "safemode": false,
+    "name": "sgc"
+  }
+}

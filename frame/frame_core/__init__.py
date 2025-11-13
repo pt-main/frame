@@ -14,11 +14,11 @@ The Frames - multitool programming paradigm.
 ### Functions: 
     #### Framer functions -
         Frame (keyclass), FramesComposer, Framer, fExec, fGet, fVar, fSys, fOp, fReturn, fCode, @framing, 
-        framing_result
+        framing_result, FastGet
     #### Plugin functions - 
         PluginBase (metaclass), PluginRegistry (keyclass), MathPlugin, register_plugin
     #### Other functions - 
-        exec_and_return_safe (keyfunction), exec_and_return, str_to_int
+        exec_and_return_safe (keyfunction), exec_and_return, str_to_int, open_and_run, save_code_to_bin
     #### Errors - 
         FrameApiError, FramerError, FramingError, FrameExecutionError, PluginError, 
         PluginIsNotWorkingError
@@ -45,7 +45,7 @@ from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
 
-_framecore_version_ = '0.4.12'
+_framecore_version_ = '0.5.1'
 
 def framing(
     framer: str | Framer = 'new',
@@ -159,11 +159,16 @@ def open_and_run(filename: str = 'ctx.json',
 def save_code_to_bin(filename: str = 'ctx.json', 
                      output_file: str = 'bin.py',
                      format: str = 'json'):
+    'only with framefiles'
     opened = open_and_run(filename, format, returning_format='frame')
     code = opened.compile()
     with open(output_file, 'w') as file: file.write(code)
     return code
 
+
+def FastGet(frame: Frame, output_name):
+    '!UNSAFE!'
+    return exec_and_return(frame.compile(), output_name, locals(), globals())
 
 from .plugins_system import (PluginBase, PluginRegistry, register_plugin)
 from .plugins import (MathPlugin)
