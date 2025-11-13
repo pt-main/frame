@@ -1,5 +1,7 @@
 from .frames import *
 from .plugins import MathPlugin
+import os, subprocess, time, ast
+
 
 
 
@@ -39,7 +41,8 @@ class FramesComposer:
     def get_frame(self, index: str | int) -> Frame:
         try: return self._frames[int(index) if self._arch == 'array' else index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
-    def sync(self, name_1: str, name_2: str) -> FramesComposer:
+    def sync(self, name_1: str, name_2: str, algoritm: int = 1) -> FramesComposer:
+        'algoritms: 1 - async code, 2 - sync code'
         if name_1 not in ('$', 'sgc'):
             f1 = self._frames[name_1]  
         else: f1 =  self.sgc
@@ -60,12 +63,76 @@ class FramesComposer:
             new_dict2[i] = f2.framer._vars[i]
         f1.framer._vars = new_dict2
         f2.framer._vars = new_dict2
+        if algoritm == 2:
+            f1c = f1.framer._code
+            f1.framer._code = f1c + f2.framer._code
+            f2.framer._code = f2.framer._code + f1c
         if name_1 not in ('$', 'sgc'): self._frames[name_1] = f1
         else: self.sgc = f1
         if name_2 not in ('$', 'sgc'): self._frames[name_2] = f2
         else: self.sgc = f2
         return self
-    def superglobal(self) -> Framer: return self.sgc
+    def superglobal(self) -> Frame: return self.sgc
+    def deploy(
+        self,
+        name: str,
+        fcomp_filename: str,
+        fcomp_format: str = 'json',
+        main_code: str = '',
+        runfile_dir: str = os.getcwd(),
+        metadata: str = '',
+        version: str = None,
+        author: str = None,
+        dependencies: list = None,
+    ):
+        self.check_deps()
+        if self.__safemode:
+            raise FrameComposeError(f'Superglobal Context [{self._superglobal_name}]', 'EXEC ERROR',
+            'Deploy is imposible in safemode.')
+        imports = ['from frame import *'] + [(f'import {i}' for i in dependencies) if dependencies not in (None, []) else '']
+        def metadata_compiler(mtdt):
+            mtdt = f'deploy_time = {time.time()}{"\n" if mtdt else ""}' + mtdt
+            counter = 1
+            max_lines = 3
+            new_mtd = ''
+            for i in mtdt.split('\n'):
+                new_mtd +=  f'    {counter}{" " * (max_lines-len(str(counter)))}| ' + str(i) + '\n'
+                counter += 1
+            return new_mtd
+        metadata = metadata_compiler(metadata)
+        done_imports = imports[0]
+        for i in imports[1]: done_imports += f'\n{i}'
+        code = f'''
+"""
+
+==========================================
+Deploy file [{name}] for fcomp by [{author}]
+Version: {version}
+Metadata:
+{metadata}
+==========================================
+
+"""
+
+# fcirf - frames composotion iso runtime file
+_fcirf_version_ = {repr(version)}
+_fcirf_name_ = {repr(name)}
+_fcirf_author_ = {repr(author)}
+_fcirf_dir_ = {repr(runfile_dir)}
+_fcirf_deps_ = {dependencies}
+_fcirf_fcomp_info_ = {[fcomp_filename, fcomp_format]}
+
+# imports
+{done_imports}
+
+fcomp = FramesComposer.from_file(_fcirf_fcomp_info_[0], _fcirf_fcomp_info_[1])
+sgc = fcomp.superglobal
+
+{main_code}
+        '''
+        with open(f'{runfile_dir}/{name}', 'w') as file:
+            file.write(code)
+        return self
     def _data(self):
         data = {'_frames': {}}
         data['_superglobal_name'] = self._superglobal_name
@@ -82,13 +149,10 @@ class FramesComposer:
         self._arch = data['_arch']
         self._deps = data['_deps']
         self.__safemode = data['__safemode']
-        
         # Load superglobal context
         self.sgc._load_data(data['sgc'])
-        
         # Clear current frames
         self._frames = {} if self._arch == 'dict' else []
-        
         # Load all frames
         if isinstance(data['_frames'], dict): fr = data['_frames'].items()
         elif isinstance(data['_frames'], list): fr = data['_frames']
@@ -104,7 +168,7 @@ class FramesComposer:
         ### Args:
             {filename}: str - file name
             {format}: str - saving format ('pickle' or 'json')
-        '''
+        ''' 
         data = self._data()
         try:
             if format == 'pickle':
@@ -261,3 +325,4 @@ if __name__ == '__main__':
         fc.save(filepath, format)
     with FramesComposer.from_file(filepath, format) as fc:
         fc.test_exec()
+        fc.deploy('test.py', 'fc.json')
