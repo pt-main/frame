@@ -1,12 +1,7 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import hashlib
-import base64, abc
-import os
-import time
-import threading as th
-import secrets
+import base64, abc, hashlib, os, time, threading as th, secrets
 
 
 
@@ -204,6 +199,12 @@ class SafeData:
     def get_logs(self, to_string: bool=True, to_join: str='\n'):
         res = to_join.join(self.logs) if to_string else self.logs
         return res
+    
+    def __del__(self):
+        self._undec_enc('DELETE')
+        del self.encrypted_data, self.raw
+        self.raw = 'DELETED'
+        self.encrypted_data = b'0x0000'
 
 
 

@@ -1,5 +1,6 @@
-from .frames import *
-from .plugins import MathPlugin
+from frame.frame_core.frames import *
+from frame.frame_core.plugins import MathPlugin
+from frame.frame_core.funcs import has_module
 import os, subprocess, time, ast
 
 
@@ -21,6 +22,9 @@ class FramesComposer:
         self._arch = arch
         self._deps = []
         self.__temp_names = []
+    def fast_import(self, modulename):
+        if has_module(modulename): self.sgc.Code(f'import {modulename}')
+        else: self.sgc.Code(f'"!WARNING: MODULE CAN BE IS NOT INSTALLED!"\nimport {modulename}')
     def load_frame(self, 
                    index: str | int, 
                    frame: Frame, 
@@ -84,6 +88,7 @@ class FramesComposer:
         version: str = None,
         author: str = None,
         dependencies: list = None,
+        runing: bool = False
     ):
         self.check_deps()
         if self.__safemode:
@@ -130,8 +135,12 @@ sgc = fcomp.superglobal
 
 {main_code}
         '''
-        with open(f'{runfile_dir}/{name}', 'w') as file:
+        path = f'{runfile_dir}/{name}'
+        with open(path, 'w') as file:
             file.write(code)
+        if runing: 
+            command = f'python3 {path}'
+            os.system(command=command)
         return self
     def _data(self):
         data = {'_frames': {}}
@@ -325,4 +334,4 @@ if __name__ == '__main__':
         fc.save(filepath, format)
     with FramesComposer.from_file(filepath, format) as fc:
         fc.test_exec()
-        fc.deploy('test.py', 'fc.json')
+        fc.deploy('test.py', 'fc.json', runing=True)
