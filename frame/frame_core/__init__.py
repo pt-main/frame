@@ -45,7 +45,7 @@ from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
 
-_framecore_version_ = '0.7.1'
+_framecore_version_ = '0.7.0'
 
 def framing(
     framer: str | Framer = 'new',
