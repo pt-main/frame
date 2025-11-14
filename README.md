@@ -33,7 +33,8 @@ This concept aims to simplify code transfer, serialization, and configuration.
   - **Frame** - An isolated execution space with its own variables and code. Can interact with other contexts.  
   - **Framing** - Creating a local environment with superglobal variables.  
   - **Superglobal** - The state of an object when it does not depend on the context. Roughly speaking, a global frame.  
-  - **Framefile** - A binary frame image that can be saved and loaded.  
+  - **Framefile** - A binary frame image that can be saved and loaded.
+  - **fcomp (iso)** - Frames composition file.
 
 #### **Example Demonstrating the Concept’s Utility** -  
 
