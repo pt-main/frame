@@ -4,6 +4,7 @@ from .frame_core import *
 
 @register_plugin('nets')
 class NetsPlugin(PluginBase):
+    '''Nets plugin.'''
     _dependencies = ['frame']
     def __init__(self, frame = None):
         super().__init__(frame)

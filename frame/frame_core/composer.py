@@ -9,9 +9,46 @@ import os, subprocess, time, ast
 class FramesComposer:
     '''
 # FramesComposer
+Fames archestrator. Based by 2 archs: dict (where indexes is any data) and array (where indexes is integrers).
+
+## Args:
+- {safemode}: bool - superglobal.safemode state.
+- {arch}: str[dict/array (array is VERY experemental)] - arch base.
+- {superglobal_name}: str - name of superglobal context.
+
+## Functions:
+- [fast_import] - import module to compose.
+- [load_fame] - load frame to compose.
+- [check_deps] - check dependencies.
+- [get_frame] - get frame from compose.
+- [sync] - sync data of 2 frames.
+- [deploy] - run and deploy compose method.
+- [_data] - compile composer to dict.
+- [_load_data] - load compiled data to compose from dict.
+- [save/load] - serealize methods.
+- [from_file] (classmethod) - create compose from file.
+- [test_exec] - checks and test run compose.
+- [__call__] - return superglobal context.
+- [__getitem__] - get frame by name.
+- [__setitem__] - load frame by name, format `compose[name] = frame`.
+- [__add__] - load frame with format like `compose + frame`.
+- [context manager `with` support]
+- [else systems]
+
+## Example:
+```
+with FramesComposer(safemode=False) as fc:
+    fc['test1'] = Frame(safemode=False)
+    fc['test2'] = Frame(safemode=False)
+    @fc['test2'].register()
+    def test():
+        return 'compleate'
+    with fc['test2'] as f:
+        f.Var('x', 10)
+        f.Var('y', 50)
+```
     '''
     def __init__(self, safemode: bool = False, arch: str = 'dict', superglobal_name: str = 'sgc'):
-        'arch - dict/array (array is VERY experemental)'
         framer = 'new' 
         self.__safemode = safemode
         save_while_exit = False
@@ -23,12 +60,20 @@ class FramesComposer:
         self._deps = []
         self.__temp_names = []
     def fast_import(self, modulename):
+        'fast module import into compose'
         if has_module(modulename): self.sgc.Code(f'import {modulename}')
         else: self.sgc.Code(f'"!WARNING: MODULE CAN BE IS NOT INSTALLED!"\nimport {modulename}')
     def load_frame(self, 
                    index: str | int, 
                    frame: Frame, 
                    add_to_deps: bool = True) -> FramesComposer:
+        '''
+#### Create frame in composer.
+#### Args: 
+- {index}: int | str - new frame index.
+- {frame}: Frame - frame object to append into composer.
+- {add_to_deps}: bool - add frame name to dependencies if true, else pass.
+        '''
         self.__temp_names.append(index)
         self._deps.append(index) if add_to_deps else None
         if self._arch == 'dict': self._frames[index] = frame
@@ -39,13 +84,26 @@ class FramesComposer:
             self._frames = _frames
         return self
     def check_deps(self):
+        '''
+Check dependencies of composer.
+        '''
         for i in self._deps: 
             if i not in self.__temp_names:
                 raise FrameComposeError(i, 'FRAME NOT FOUND', f'Dependency is not found: [{i}].')
     def get_frame(self, index: str | int) -> Frame:
+        '''
+Get frame by {index}.
+        '''
         try: return self._frames[int(index) if self._arch == 'array' else index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
     def sync(self, name_1: str, name_2: str, algoritm: int = 1) -> FramesComposer:
+        '''
+Sync 2 frames with algoritm.
+
+Algoritms:
+    - 1: sync variables
+    - 2: algoritm 1 + sync code
+        '''
         'algoritms: 1 - async code, 2 - sync code'
         if name_1 not in ('$', 'sgc'):
             f1 = self._frames[name_1]  
@@ -76,7 +134,7 @@ class FramesComposer:
         if name_2 not in ('$', 'sgc'): self._frames[name_2] = f2
         else: self.sgc = f2
         return self
-    def superglobal(self) -> Frame: return self.sgc
+    def superglobal(self) -> Frame: 'get superglobal context of class'; return self.sgc
     def deploy(
         self,
         name: str,
@@ -90,10 +148,32 @@ class FramesComposer:
         dependencies: list = None,
         runing: bool = False
     ):
+        '''
+# Deploy compose
+Method to compile and deploy your compose to file and run (optional).
+
+## Args:
+- {name}: str - filename to deployfile.
+- {fcomp_filename}: str - fcomp iso dilename.
+- {fcomp_format}: str - fcomp format.
+- {main_code}: str - deployfile code.
+- {runfile_dir}: str - main dir for deployfile.
+- {metadata}: str - metadata for deployfile.
+    - {version}: str - metadata
+    - {author}: str - metadata
+- {dependencies}: str - deps for deploy
+- {running}: bool - running deploy file if true, else pass
+
+## Example: 
+```
+with FramesComposer.from_file(filepath, format) as fc: fc.deploy('test.py', 'fc.json', runing=True)
+```
+This is simple deploy of file.
+        '''
         self.check_deps()
         if self.__safemode:
             raise FrameComposeError(f'Superglobal Context [{self._superglobal_name}]', 'EXEC ERROR',
-            'Deploy is imposible in safemode.')
+            'FramesCompose deploy is imposible in safemode.')
         imports = ['from frame import *'] + [(f'import {i}' for i in dependencies) if dependencies not in (None, []) else '']
         def metadata_compiler(mtdt):
             mtdt = f'deploy_time = {time.time()}{"\n" if mtdt else ""}' + mtdt
@@ -143,6 +223,7 @@ sgc = fcomp.superglobal
             os.system(command=command)
         return self
     def _data(self):
+        '''Compile composer to dictionary data.'''
         data = {'_frames': {}}
         data['_superglobal_name'] = self._superglobal_name
         data['_arch'] = self._arch
@@ -175,8 +256,8 @@ sgc = fcomp.superglobal
         '''
         ## Saving FramesComposer to file.
         ### Args:
-            {filename}: str - file name
-            {format}: str - saving format ('pickle' or 'json')
+        - {filename}: str - file name
+        - {format}: str - saving format ('pickle' or 'json')
         ''' 
         data = self._data()
         try:
@@ -195,10 +276,10 @@ sgc = fcomp.superglobal
         '''
         ## Loading FramesComposer from file.
         ### Args:
-            {filename}: str - file name  
-            {format}: str - loading format ('pickle' or 'json')
+        - {filename}: str - file name  
+        - {format}: str - loading format ('pickle' or 'json')
         ### Returns:
-            FramesComposer: self for method chaining
+        - FramesComposer: self for method chaining
         '''
         try:
             if format == 'pickle':
@@ -222,10 +303,10 @@ sgc = fcomp.superglobal
         '''
         ## Create FramesComposer from file (class method)
         ### Args:
-            {filename}: str - file name
-            {format}: str - loading format ('pickle' or 'json')
+        - {filename}: str - file name
+        - {format}: str - loading format ('pickle' or 'json')
         ### Returns:
-            FramesComposer: new instance loaded from file
+        - FramesComposer: new instance loaded from file
         '''
         composer = cls()
         composer.load(filename, format)
@@ -335,3 +416,4 @@ if __name__ == '__main__':
     with FramesComposer.from_file(filepath, format) as fc:
         fc.test_exec()
         fc.deploy('test.py', 'fc.json', runing=True)
+

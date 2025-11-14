@@ -28,7 +28,7 @@ The Frames - multitool programming paradigm.
     - Framing - creating a local environment with superglobal variables.
     - Superglobal is the state of an object when it does not depend on the context. Roughly speaking, a global frame.
     - Framefile is a binary frame image that can be saved and loaded.
-    - fcomp iso - Frames composition file
+    - fcomp (iso) - Frames composition file
 
 ### Warning: 
 Main clases of frame (like [Framer], for example) using eval/compile/exec. 
@@ -45,7 +45,7 @@ from .funcs import (str_to_int, exec_and_return_safe, exec_and_return)
 from .exceptions import (FrameApiError, FrameExecutionError, FramerError, FramingError, 
                         PluginError, PluginIsNotWorkingError)
 
-_framecore_version_ = '0.5.1'
+_framecore_version_ = '0.7.1'
 
 def framing(
     framer: str | Framer = 'new',
@@ -114,7 +114,12 @@ test
 
 
     
-def framing_result(framer: Framer, func: object, name_of_result_variable: str = 'res', *func_args, **func_kwargs):
+def framing_result(
+        framer: Framer, 
+        func: object, 
+        name_of_result_variable: str = 'res', 
+        *func_args, **func_kwargs
+        ):
     '''
 ## Getting result from [@framing def ...] function
 ### Args:
@@ -143,31 +148,63 @@ print(framing_result(fGet('frame', fSys.framers['temp']), test, 'res'))
     if resf != resg: raise FramingError(f'Variable [{name_of_result_variable}] is not found in Frame[{framer}].')
     return resg
 
-def open_and_run(filename: str = 'ctx.json', 
-                 format: str = 'json', 
-                 name_of_result_var: str = 'res',
-                 returning_format: str = 'result', 
-                 exec_method: str = 'basic') -> any | Frame:
-    '{returning_format} - result/frame \n\n{exec_method} - basic/safe'
+def open_and_run(
+        filename: str = 'ctx.json', 
+        format: str = 'json', 
+        outout_var: str = 'res',
+        returning_format: str = 'result', 
+        exec_method: str = 'basic'
+        ) -> any | Frame:
+    '''
+## Run framefile method
+Open frame file and start then.
+
+### Args:
+- {filename}: str - filename of framefile
+- {format}: str - framefile open format
+- {output_var}: str - name of var to output
+- {returning_format}: str[result/frame] - if 'result', method returning value of {output_var}, else returning frame
+- {exec_method}: str[basic/safe] - method to execute framefile
+    '''
     if returning_format == 'result':
         with Frame().load(filename, format) as f: 
             code = f.compile()
-            res = exec_and_return(code, name_of_result_var) if exec_method == 'basic' else exec_and_return_safe(code, name_of_result_var)
+            res = exec_and_return(code, outout_var) if exec_method == 'basic' else exec_and_return_safe(code, outout_var)
     else: res = Frame().load(filename, format)
     return res
 
-def save_code_to_bin(filename: str = 'ctx.json', 
-                     output_file: str = 'bin.py',
-                     format: str = 'json'):
-    'only with framefiles'
+def save_code_to_bin(
+        filename: str = 'ctx.json', 
+        output_file: str = 'bin.py',
+        format: str = 'json'
+        ):
+    '''
+## Compile framefile method
+Open framefile and save code to {output_file} bin python file.
+
+### Args: 
+- {filename}: str - name of file
+- {output_file}: str - name of output file
+- {format}: str - open format of framefile (json/pickle)
+'''
     opened = open_and_run(filename, format, returning_format='frame')
     code = opened.compile()
     with open(output_file, 'w') as file: file.write(code)
     return code
 
 
-def FastGet(frame: Frame, output_name):
-    '!UNSAFE!'
+def FastGet(
+        frame: Frame, 
+        output_name
+        ):
+    '''
+## Unsafe method for get variavle
+Simple fast method to get variable.
+
+### Args: 
+- {frame}: Frame - variable frame
+- {output_name} - variable name
+    '''
     return exec_and_return(frame.compile(), output_name, locals(), globals())
 
 from .plugins_system import (PluginBase, PluginRegistry, register_plugin)

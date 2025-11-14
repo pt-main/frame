@@ -22,7 +22,7 @@ class _CodeGenerator:
         self._cache += 1
         return var_name
     def _gen_id(self, k: int = 0):
-        id = f'_id{len(self._code)+self._cache+k}{self._cache * (k+1)}{k}{id(k)}'
+        id = f'_id{len(self._code)+self._cache+k}{self._cache * (k+1)}{k}'
         self._cache += 1
         return id
     def _comentary(self, *args):
@@ -57,16 +57,14 @@ For system.
         self._code.append(code_line)
         return result_var
     
-    def execute(self, algoritm = 1):
+    def execute(self):
         try:
             final_code = "\n".join(self._code)
             local_scope = self._vars.copy()
             compiled = compile(final_code, '<string>', 'exec')
             exec(compiled, {}, local_scope)
-            if algoritm == 1:
-                return_var = "__frame_return_value"
-                return local_scope.get(return_var) 
-            return local_scope
+            return_var = "__frame_return_value"
+            return local_scope.get(return_var) 
         except Exception as e:
             raise FrameExecutionError(f"Error in frame execution: {e}\nCode:\n{final_code}")
     
@@ -113,7 +111,6 @@ class SystemOP:
               true_block: str, 
               false_block: str = None, 
               framer: Framer | None = None):
-        'Simple condition blok for frame.'
         framer = System.framer if framer == None else framer
         framer._comentary('condition block', condition)
         cache = framer._gen_id(len(framer._aliases) + len(framer._code))
@@ -256,13 +253,13 @@ result: 560
         self._code = code
         self.framer = framer
 
-def Exec(framer: Framer | None | str = 'System', algoritm: int = 1):
+def Exec(framer: Framer | None | str = 'System'):
     '''
 Execution of [Frame] method.
     '''
     framer: Framer = Framer() if framer == None else System.framer if isinstance(framer, str) and framer.lower().strip() == 'system' else framer
     with framer._lock:
-        return framer.execute(algoritm)
+        return framer.execute()
     
 class Frame:
     '''
@@ -271,7 +268,7 @@ Abstraction api for all [Framer] and [System] methods.
 
 (framer in functions is Frame.framer)
 
-You can use with to create context, and call [Frame] object like `frame()` to get framer.
+You can use with to create context, and call [Frame] object like `ctx()` to get framer.
 
 ### Args of initialization:
 - {framer}: str | Framer = 'new' - framer context object for frame.
@@ -342,9 +339,9 @@ result: 500
         if comentary:
             self.framer._comentary('code section', f'Framer: {self._name}', f'Safemode: {self.__safemode}', *comentaries)
         return Code(code, self.framer)
-    def Exec(self, algoritm: int = 1) -> Any:
+    def Exec(self) -> Any:
         '''Executing code of frame.'''
-        if not self.__safemode: return Exec(self.framer, algoritm)
+        if not self.__safemode: return Exec(self.framer)
         else: raise FrameApiError('Exec is not avialable in safemode.')
     def compile(self) -> str: 
         '''Get full code of frame.'''
@@ -354,7 +351,6 @@ result: 500
         self.framer = Framer()
         return self
     def register(self, name: str = None):
-        'Register any construction to frame decortor.'
         def decorator(func):
             func_name = name or func.__name__
             try:
@@ -392,8 +388,8 @@ result: 500
         '''
         ## Saving frame to file.
         ### Args:
-        - {filename}: str - file name
-        - {format}: str - saving format ('pickle' or 'json')
+            {filename}: str - file name
+            {format}: str - saving format ('pickle' or 'json')
         '''
         data = self.data
         try:
@@ -412,8 +408,8 @@ result: 500
         '''
         ## Loading frame from file.
         ### Args:
-        - {filename}: str - file name
-        - {format}: str - loading format ('pickle' or 'json')
+            {filename}: str - file name
+            {format}: str - loading format ('pickle' or 'json')
         '''
         try:
             if format == 'pickle':
