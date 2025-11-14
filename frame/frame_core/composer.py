@@ -66,7 +66,7 @@ with FramesComposer(safemode=False) as fc:
     def load_frame(self, 
                    index: str | int, 
                    frame: Frame, 
-                   add_to_deps: bool = True) -> FramesComposer:
+                   add_to_deps: bool = True) -> 'FramesComposer':
         '''
 #### Create frame in composer.
 #### Args: 
@@ -96,7 +96,7 @@ Get frame by {index}.
         '''
         try: return self._frames[int(index) if self._arch == 'array' else index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', e)
-    def sync(self, name_1: str, name_2: str, algoritm: int = 1) -> FramesComposer:
+    def sync(self, name_1: str, name_2: str, algoritm: int = 1) -> 'FramesComposer':
         '''
 Sync 2 frames with algoritm.
 
@@ -170,11 +170,15 @@ with FramesComposer.from_file(filepath, format) as fc: fc.deploy('test.py', 'fc.
 ```
 This is simple deploy of file.
         '''
+        runfile_dir = runfile_dir.replace('$', os.getcwd()) if runfile_dir.startswith('$') else runfile_dir
         self.check_deps()
         if self.__safemode:
             raise FrameComposeError(f'Superglobal Context [{self._superglobal_name}]', 'EXEC ERROR',
             'FramesCompose deploy is imposible in safemode.')
-        imports = ['from frame import *'] + [(f'import {i}' for i in dependencies) if dependencies not in (None, []) else '']
+        _cond = dependencies not in (None, [])
+        imports = ['from frame import *'] 
+        if _cond:
+            for i in dependencies: imports.append(f'import {i}')
         def metadata_compiler(mtdt):
             mtdt = f'deploy_time = {time.time()}{"\n" if mtdt else ""}' + mtdt
             counter = 1
@@ -185,9 +189,9 @@ This is simple deploy of file.
                 counter += 1
             return new_mtd
         metadata = metadata_compiler(metadata)
-        done_imports = imports[0]
-        for i in imports[1]: done_imports += f'\n{i}'
         code = f'''
+# start
+{'\n'.join(imports)}
 """
 
 ==========================================
@@ -207,20 +211,19 @@ _fcirf_dir_ = {repr(runfile_dir)}
 _fcirf_deps_ = {dependencies}
 _fcirf_fcomp_info_ = {[fcomp_filename, fcomp_format]}
 
-# imports
-{done_imports}
-
 fcomp = FramesComposer.from_file(_fcirf_fcomp_info_[0], _fcirf_fcomp_info_[1])
 sgc = fcomp.superglobal
 
 {main_code}
         '''
-        path = f'{runfile_dir}/{name}'
-        with open(path, 'w') as file:
+        pth = os.getcwd()
+        os.chdir(runfile_dir)
+        with open(name, 'w') as file:
             file.write(code)
         if runing: 
-            command = f'python3 {path}'
+            command = f'python3 {name}'
             os.system(command=command)
+        os.chdir(pth)
         return self
     def _data(self):
         '''Compile composer to dictionary data.'''
@@ -272,6 +275,7 @@ sgc = fcomp.superglobal
             return self
         except Exception as e:
             raise FrameApiError(f"Save failed: {e}")
+    
     def load(self, filename: str, format: str = 'json') -> 'FramesComposer':
         '''
         ## Loading FramesComposer from file.
@@ -318,14 +322,15 @@ sgc = fcomp.superglobal
             'Execution is imposible in safemode.')
         self.sgc.Exec()
         return self
-    def __enter__(self) -> FramesComposer: return self
+    def __enter__(self) -> 'FramesComposer': return self
     def __exit__(self, *args, **kwargs): pass
     def __call__(self, *args, **kwds) -> Frame: return self.superglobal()
     def __add__(self, other: Frame) -> None: 
         if isinstance(other, Frame): self.load_frame(len(self._frames) if self._arch == 'array' else other._name, other)
         else: raise FrameComposeError('', 'NotSuuportableObject', f"Inncorect attemp to add {type(other)} object to frames.")
     def __getitem__(self, index) -> Frame:
-        try: return self._frames[index]
+        try: 
+            return self.sgc if index == self._superglobal_name or str(index).strip() == '$' else self._frames[index]
         except (IndexError, KeyError) as e: raise FrameComposeError(index, 'GetFrameError', f'Unknown key: {e}')
         except Exception as e: raise FrameComposeError(index, 'GetItemError', e)
     def __setitem__(self, index, value):

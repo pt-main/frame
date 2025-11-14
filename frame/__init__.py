@@ -10,8 +10,7 @@ Multi-functional framework combining many functions and the collection of severa
         - Framing - creating a local environment with superglobal variables.
         - Superglobal is the state of an object when it does not depend on the context. Roughly speaking, a global frame.
         - Framefile is a binary frame image that can be saved and loaded.
-        - fcomp (iso) - Frames composition file.
-        
+
     #### Nets
     Library concept with functions for white/grey hacking, testing and education.
 '''

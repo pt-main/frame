@@ -22,7 +22,7 @@ class _CodeGenerator:
         self._cache += 1
         return var_name
     def _gen_id(self, k: int = 0):
-        id = f'_id{len(self._code)+self._cache+k}{self._cache * (k+1)}{k}{id(k)}'
+        id = f'_id{len(self._code)+self._cache+k}{self._cache * (k+1)}{k}'
         self._cache += 1
         return id
     def _comentary(self, *args):
