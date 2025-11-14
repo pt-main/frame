@@ -1,6 +1,7 @@
 setup.py
 frame/__init__.py
 frame/framefile.py
+frame/full.py
 frame/nets_plugin.py
 frame/simple.py
 frame/simple_frames.py
@@ -24,7 +25,9 @@ frame/nets_core/secure/__init__.py
 frame/nets_core/secure/data_security.py
 frame/nets_core/utils/__init__.py
 frame/utils/__init__.py
-frame/utils/constants.py
+frame/utils/alternative/__init__.py
+frame/utils/alternative/alt_math.py
+frame/utils/alternative/alt_sys.py
 frame_fwl.egg-info/PKG-INFO
 frame_fwl.egg-info/SOURCES.txt
 frame_fwl.egg-info/dependency_links.txt

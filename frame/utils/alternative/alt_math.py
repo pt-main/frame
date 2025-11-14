@@ -1,22 +1,22 @@
 '''
 # Alternative math. 
+
 '''
 
 
-# imports and settings for int and float
+
+# imports
 import ctypes, sys, builtins, abc
 from decimal import Decimal, getcontext
-
-getcontext().prec = 500000
-sys.set_int_max_str_digits(500000)
-
 
 
 # our methods
 def superlarge(x):
     '''creating large integrer from [x]'''
     res = x
-    for i in range(x): res **= (i if i != 0 else 1) 
+    for i in range(x): 
+        k = (i if i != 0 else 1)
+        res **= k if x <= 9**99 else k / 3
     return res
 
 def supersmall(x):
@@ -33,6 +33,10 @@ def re_pow(x):
         res -= evaled if res - evaled >= 0 else -evaled
     return res
 
+def setmax(number: int):
+    'set max digits in int'
+    getcontext().prec = number
+    sys.set_int_max_str_digits(number)
 
 
 
@@ -77,21 +81,29 @@ def set_alt_funcs():
     builtins.supersmall = supersmall
     builtins.repow = re_pow
 
-    builtins.dfl_float = set_default_float
-    builtins.new_float = set_default_float
+    builtins._dfl_float = set_default_float
+    builtins._new_float = set_default_float
 
 def replace_alt_funcs():
     import builtins as nbins
     global builtins
     builtins = bin
 
-class alt_math(abc.ABC):
-    @staticmethod
-    def __enter__():
+class alt_math:
+    def __init__(self, max: int = 4300):
+        self.max = max
+    def enable(self):
         set_decimal_float()
         set_alt_funcs()
-    @staticmethod
-    def __exit__(*args):
+        setmax(self.max)
+    def disable(self):
         set_default_float()
         replace_alt_funcs()
+        setmax(4300)
+    def __enter__(self, *args):
+        self.enable(); return self
+    def __exit__(self, *args):
+        self.disable()
 
+builtins.__setmax__ = setmax
+builtins.__altmath__ = alt_math
