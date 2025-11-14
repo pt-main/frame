@@ -7,7 +7,16 @@ import math, cmath, random, importlib
 
 
 class PluginBase(ABC):
+    '''
+# Base for any plugins
+System objects: 
+- frame - inner frame.
+- _has_frame - isinstance {frame} arg - Frame.
+- _dependencies - dependencies for plugin.
+- _state - inner state.
+    '''
     def __init__(self, frame: Frame | None = None):
+        '''Init plugin method.'''
         self.frame = frame
         self._has_frame = isinstance(frame, Frame)
         super().__init__()

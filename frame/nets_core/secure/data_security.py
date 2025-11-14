@@ -32,7 +32,7 @@ class SafeData:
         data: Any                    - data without encrypt
         key: Any                     - key for encrypting
         salt_for_key: bytes          - salt for encrypting
-        time_to_live: int | 'inf'    - if you input int - ttl=time_to_live
+        time_to_live: int | 'inf'    - if you input int - ttl=time_to_live,
                                        if you input 'inf' - ttl=None
     User methods:
         'of'     - full encrypt for data

@@ -113,6 +113,7 @@ class SystemOP:
               true_block: str, 
               false_block: str = None, 
               framer: Framer | None = None):
+        'Simple condition blok for frame.'
         framer = System.framer if framer == None else framer
         framer._comentary('condition block', condition)
         cache = framer._gen_id(len(framer._aliases) + len(framer._code))
@@ -270,7 +271,7 @@ Abstraction api for all [Framer] and [System] methods.
 
 (framer in functions is Frame.framer)
 
-You can use with to create context, and call [Frame] object like `ctx()` to get framer.
+You can use with to create context, and call [Frame] object like `frame()` to get framer.
 
 ### Args of initialization:
 - {framer}: str | Framer = 'new' - framer context object for frame.
@@ -353,6 +354,7 @@ result: 500
         self.framer = Framer()
         return self
     def register(self, name: str = None):
+        'Register any construction to frame decortor.'
         def decorator(func):
             func_name = name or func.__name__
             try:
@@ -390,8 +392,8 @@ result: 500
         '''
         ## Saving frame to file.
         ### Args:
-            {filename}: str - file name
-            {format}: str - saving format ('pickle' or 'json')
+        - {filename}: str - file name
+        - {format}: str - saving format ('pickle' or 'json')
         '''
         data = self.data
         try:
@@ -410,8 +412,8 @@ result: 500
         '''
         ## Loading frame from file.
         ### Args:
-            {filename}: str - file name
-            {format}: str - loading format ('pickle' or 'json')
+        - {filename}: str - file name
+        - {format}: str - loading format ('pickle' or 'json')
         '''
         try:
             if format == 'pickle':

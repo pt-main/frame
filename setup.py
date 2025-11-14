@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='frame-fwl', # frame-framework-lib
-    version='0.4.9.7',
+    version='0.5.5',
     description='The Frame - multitool module for programming with advanced framing capabilities',
     author='pt',
     author_email='kvantorium73.int@gmail.com',

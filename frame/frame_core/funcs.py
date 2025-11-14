@@ -186,6 +186,7 @@ result: 34
         print(f"Error in code running: {e}")
         return None
 
-def has_module(module_name: str): 
+def has_module(module_name: str):
+    'check module installation'
     try: __import__(module_name); return True
     except ImportError: return False
