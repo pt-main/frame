@@ -1,6 +1,6 @@
-from frame.frame_core.frames import *
-from frame.frame_core.plugins import MathPlugin
-from frame.frame_core.funcs import has_module
+from .frames import *
+from .plugins import MathPlugin
+from .funcs import has_module
 import os, subprocess, time, ast
 
 
@@ -146,7 +146,11 @@ Algoritms:
         version: str = None,
         author: str = None,
         dependencies: list = None,
-        runing: bool = False
+        runing: bool = False,
+        pre_command: list | str = '',
+        end_command: list | str = '',
+        pre_code: str = '',
+        build_script_for: str | list | None = None
     ):
         '''
 # Deploy compose
@@ -163,6 +167,11 @@ Method to compile and deploy your compose to file and run (optional).
     - {author}: str - metadata
 - {dependencies}: str - deps for deploy
 - {running}: bool - running deploy file if true, else pass
+- {pre_command}: list | str - inizialize command (s), running while deploy begin.
+- {pre_code}: str - code for inizialize in deployfile.
+- {end_command}: list | str - render command. executing after build deployfile.
+- {build_script_for}: str | list | None = None - os, which create console script for systems. 
+    - systems: [macos, unix (linux), win]
 
 ## Example: 
 ```
@@ -170,16 +179,23 @@ with FramesComposer.from_file(filepath, format) as fc: fc.deploy('test.py', 'fc.
 ```
 This is simple deploy of file.
         '''
-        runfile_dir = runfile_dir.replace('$', os.getcwd()) if runfile_dir.startswith('$') else runfile_dir
+        # execute pre-command
+        if isinstance(pre_command, str): os.system(pre_command)
+        elif isinstance(pre_command, list): 
+            for _command in pre_command: os.system(_command)
+        else: raise TypeError(f"Unknown type of [pre_command] : '{type(pre_command)}'. Can be only list or str.")
+        # checks
         self.check_deps()
         if self.__safemode:
             raise FrameComposeError(f'Superglobal Context [{self._superglobal_name}]', 'EXEC ERROR',
             'FramesCompose deploy is imposible in safemode.')
+        # pre-work
+        runfile_dir = runfile_dir.replace('$', os.getcwd()) if runfile_dir.startswith('$') else runfile_dir
         _cond = dependencies not in (None, [])
         imports = ['from frame import *'] 
         if _cond:
             for i in dependencies: imports.append(f'import {i}')
-        def metadata_compiler(mtdt):
+        def metadata_compiler(mtdt): # compile and parse metadata by \n 
             mtdt = f'deploy_time = {time.time()}{"\n" if mtdt else ""}' + mtdt
             counter = 1
             max_lines = 3
@@ -189,9 +205,14 @@ This is simple deploy of file.
                 counter += 1
             return new_mtd
         metadata = metadata_compiler(metadata)
+        # creating code
         code = f'''
-# start
+# ==== PRE CODE ====
+{pre_code}
+
+# ==== IMPORTS ====
 {'\n'.join(imports)}
+
 """
 
 ==========================================
@@ -203,6 +224,7 @@ Metadata:
 
 """
 
+# ==== CONFIGS ====
 # fcirf - frames composotion iso runtime file
 _fcirf_version_ = {repr(version)}
 _fcirf_name_ = {repr(name)}
@@ -210,12 +232,15 @@ _fcirf_author_ = {repr(author)}
 _fcirf_dir_ = {repr(runfile_dir)}
 _fcirf_deps_ = {dependencies}
 _fcirf_fcomp_info_ = {[fcomp_filename, fcomp_format]}
+systems = {repr(build_script_for)}
 
 fcomp = FramesComposer.from_file(_fcirf_fcomp_info_[0], _fcirf_fcomp_info_[1])
 sgc = fcomp.superglobal
 
+# ==== MAIN CODE ====
 {main_code}
         '''
+        # creating files
         pth = os.getcwd()
         os.chdir(runfile_dir)
         with open(name, 'w') as file:
@@ -224,6 +249,35 @@ sgc = fcomp.superglobal
             command = f'python3 {name}'
             os.system(command=command)
         os.chdir(pth)
+        def buildfor(system: str):
+            system = system.strip().lower()
+            if system in ('unix', 'linux', 'mac', 'macos', 'darwin'): format = 'sh'
+            elif system in ('windows', 'win'): format = 'bat'
+            else: AttributeError(f'Unknown system to build console script: {system}')
+            path = os.getcwd()
+            code = f'''
+echo 'BEGIN'
+
+cd {runfile_dir}
+
+python3 {name}
+
+cd {path}
+
+echo 'END'
+'''
+            with open(f'start_{name}.{format}', 'w') as file: file.write(code)    
+        # creating system files.
+        if isinstance(build_script_for, str): buildfor(build_script_for)
+        elif isinstance(build_script_for, list): 
+            for system in build_script_for: buildfor(system)
+        else: raise TypeError(f"Unknown type of [build_script_for] : '{type(build_script_for)}'. Can be only list or str.")
+
+        # executing end_command
+        if isinstance(end_command, str): os.system(end_command)
+        elif isinstance(end_command, list): 
+            for _command in end_command: os.system(_command)
+        else: raise TypeError(f"Unknown type of [end_command] : '{type(end_command)}'. Can be only list or str.")
         return self
     def _data(self):
         '''Compile composer to dictionary data.'''
@@ -299,7 +353,7 @@ sgc = fcomp.superglobal
             return self
             
         except FileNotFoundError:
-            raise FrameApiError(f"File not found: {filename}")
+            raise FrameApiError(f"File not found: {filename} (your dir is [{os.getcwd()}])")
         except Exception as e:
             raise FrameApiError(f"Load failed: {e}")
     @classmethod
